@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@import "../styles/editorial.css";
+
+:root {
+  --background: #f5f3ef;
+  --foreground: #090909;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Manrope", "Inter", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", "Manrope", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+  --animate-accordion-down: accordion-down 0.22s ease-out;
+  --animate-accordion-up: accordion-up 0.22s ease-out;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  background-image:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.92), transparent 42%),
+    linear-gradient(180deg, #faf7f2 0%, #f5f3ef 100%);
+}
+
+::selection {
+  background: #000000;
+  color: #ffffff;
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+}
