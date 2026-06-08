@@ -1,4 +1,4 @@
-# MYBRAND Atelier
+# VALTORN
 
 Luxury fashion eCommerce storefront built with Next.js 15 App Router, TypeScript, Tailwind CSS, shadcn-style UI primitives, Supabase-ready services, Zustand cart state, Framer Motion, and payment scaffolding for Stripe plus SSLCommerz.
 
