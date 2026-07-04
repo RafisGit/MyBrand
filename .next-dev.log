@@ -8,17 +8,68 @@
    - Environments: .env.local
 
  ✓ Starting...
- ✓ Ready in 1583ms
+ ✓ Ready in 1544ms
  ○ Compiling /middleware ...
- ✓ Compiled /middleware in 882ms (269 modules)
- ✓ Compiled in 412ms (269 modules)
- ✓ Compiled in 83ms (269 modules)
- ✓ Compiled in 58ms (269 modules)
- ✓ Compiled in 89ms (269 modules)
- ✓ Compiled in 64ms (269 modules)
- ✓ Compiled in 53ms (269 modules)
- ✓ Compiled in 58ms (269 modules)
- ✓ Compiled in 48ms (269 modules)
- ✓ Compiled in 47ms (269 modules)
- ✓ Compiled in 54ms (269 modules)
- ✓ Compiled in 39ms (269 modules)
+ ✓ Compiled /middleware in 4.4s (2453 modules)
+MIDDLEWARE: {
+  pathname: '/account',
+  cookies: [],
+  hasUser: false,
+  userId: undefined
+}
+MIDDLEWARE: { pathname: '/admin', cookies: [], hasUser: false, userId: undefined }
+ GET /api/products?page=1&pageSize=5 200 in 5967ms
+ GET /products 200 in 6074ms
+ GET / 200 in 6081ms
+MIDDLEWARE: {
+  pathname: '/checkout',
+  cookies: [],
+  hasUser: false,
+  userId: undefined
+}
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 785ms (2188 modules)
+DEBUG: getCurrentAuthContext - authUser: null error: [Error [AuthSessionMissingError]: Auth session missing!] {
+  __isAuthError: true,
+  status: 400,
+  code: undefined
+}
+ GET /api/categories 200 in 1171ms
+ GET /auth/login 200 in 1086ms
+DEBUG: getCurrentAuthContext - authUser: null error: [Error [AuthSessionMissingError]: Auth session missing!] {
+  __isAuthError: true,
+  status: 400,
+  code: undefined
+}
+ GET /auth/login?next=%2Fcheckout 200 in 85ms
+MIDDLEWARE: {
+  pathname: '/checkout',
+  cookies: [],
+  hasUser: false,
+  userId: undefined
+}
+DEBUG: getCurrentAuthContext - authUser: null error: [Error [AuthSessionMissingError]: Auth session missing!] {
+  __isAuthError: true,
+  status: 400,
+  code: undefined
+}
+ GET /auth/login 200 in 201ms
+ GET / 200 in 267ms
+ GET /products 200 in 286ms
+ ✓ Compiled /products/[slug] in 480ms (2220 modules)
+ GET /products/shadow-oversized-tee 200 in 1293ms
+ HEAD /products/shadow-oversized-tee 200 in 46ms
+ GET /products/shadow-oversized-tee 200 in 148ms
+ ✓ Compiled /_not-found in 298ms (1674 modules)
+ GET /sitemap.xml 404 in 725ms
+ GET /robots.txt 404 in 727ms
+ GET /contact 404 in 687ms
+ GET /privacy 404 in 696ms
+ GET /returns 404 in 704ms
+ ✓ Compiled in 589ms (944 modules)
+ ✓ Compiled in 167ms (944 modules)
+ ✓ Compiled in 233ms (944 modules)
+ ✓ Compiled in 151ms (944 modules)
+ ✓ Compiled in 131ms (944 modules)
+ ✓ Compiled in 163ms (944 modules)
+ ✓ Compiled in 142ms (944 modules)

@@ -13,7 +13,13 @@ export type ProductRecordWithRelations = {
   id: string;
   name: string;
   price: number;
-  product_images: Pick<DbProductImage, "display_order" | "image_url">[] | null;
+  product_images: {
+    display_order: number;
+    image_url: string;
+    alt_text?: string | null;
+    storage_path?: string | null;
+    file_size?: number | null;
+  }[] | null;
   product_variants:
     | Pick<DbProductVariant, "color" | "id" | "size" | "sku" | "stock">[]
     | null;
@@ -24,7 +30,9 @@ export type ProductRecordWithRelations = {
   updated_at: string;
 };
 
-export function mapProductRecord(record: ProductRecordWithRelations): CatalogProduct {
+export function mapProductRecord(record: ProductRecordWithRelations): CatalogProduct & {
+  detailedImages?: Array<{ imageUrl: string; altText?: string | null; storagePath?: string | null; fileSize?: number | null; displayOrder: number }>;
+} {
   const sortedImages = [...(record.product_images ?? [])].sort(
     (left, right) => left.display_order - right.display_order,
   );
@@ -36,6 +44,14 @@ export function mapProductRecord(record: ProductRecordWithRelations): CatalogPro
       imageUrls.push(seedMatch.images[index] ?? seedMatch.images[0]);
     }
   }
+
+  const detailedImages = sortedImages.map((image) => ({
+    imageUrl: image.image_url,
+    altText: image.alt_text ?? null,
+    storagePath: image.storage_path ?? null,
+    fileSize: image.file_size ?? null,
+    displayOrder: image.display_order,
+  }));
 
   const variants = record.product_variants ?? [];
   const reviews = record.reviews ?? [];
@@ -67,6 +83,7 @@ export function mapProductRecord(record: ProductRecordWithRelations): CatalogPro
       slug: record.categories?.slug ?? null,
     },
     images: imageUrls,
+    detailedImages: detailedImages.length ? detailedImages : undefined,
     primaryImage: imageUrls[0] ?? null,
     availableSizes: Array.from(new Set(variants.map((variant) => variant.size))),
     availableColors: Array.from(new Set(variants.map((variant) => variant.color))),

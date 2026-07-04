@@ -60,6 +60,9 @@ export async function createProductAction(input: unknown) {
     images: payload.images.map((image) => ({
       displayOrder: image.displayOrder,
       imageUrl: image.imageUrl,
+      altText: image.altText ?? null,
+      storagePath: image.storagePath ?? null,
+      fileSize: image.fileSize ?? null,
     })),
     variants: payload.variants,
   });
@@ -77,6 +80,9 @@ export async function updateProductAction(productId: string, input: unknown) {
     images: payload.images.map((image) => ({
       displayOrder: image.displayOrder,
       imageUrl: image.imageUrl,
+      altText: image.altText ?? null,
+      storagePath: image.storagePath ?? null,
+      fileSize: image.fileSize ?? null,
     })),
     variants: payload.variants,
   });

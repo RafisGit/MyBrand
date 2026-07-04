@@ -11,17 +11,12 @@ import type { CatalogProduct } from "@/types/backend";
 import { createPaginationMeta } from "@/lib/utils/api";
 import { mapProductRecord } from "@/lib/supabase/mappers";
 
-function validateThreeImages(images: { displayOrder: number; imageUrl: string }[]) {
-  if (images.length !== 3) {
-    throw new AppError("Product must include exactly 3 images.", 400);
+function validateProductImages(images: { displayOrder: number; imageUrl: string }[]) {
+  if (images.length < 3) {
+    throw new AppError("Product must include at least 3 images.", 400);
   }
-
-  const uniqueOrders = new Set(images.map((image) => image.displayOrder));
-  if (uniqueOrders.size !== 3 || ![0, 1, 2].every((value) => uniqueOrders.has(value))) {
-    throw new AppError(
-      "Product images must include hero, flat lay, and macro variations with display_order 0, 1, and 2.",
-      400,
-    );
+  if (images.length > 10) {
+    throw new AppError("Product cannot include more than 10 images.", 400);
   }
 }
 
@@ -54,7 +49,7 @@ type AdminProductRecord = {
   id: string;
   name: string;
   price: number;
-  product_images: { display_order: number; image_url: string }[] | null;
+  product_images: { display_order: number; image_url: string; alt_text?: string | null; storage_path?: string | null; file_size?: number | null }[] | null;
   product_variants: {
     color: string;
     id: string;
@@ -172,7 +167,7 @@ export async function createProduct(input: {
   discountPrice?: number | null;
   featured: boolean;
   gender: "men" | "women" | "unisex";
-  images: { displayOrder: number; imageUrl: string }[];
+  images: { displayOrder: number; imageUrl: string; altText?: string | null; storagePath?: string | null; fileSize?: number | null }[];
   name: string;
   price: number;
   slug?: string;
@@ -205,7 +200,7 @@ export async function createProduct(input: {
     throw new AppError("Product could not be created.", 500);
   }
 
-  validateThreeImages(input.images);
+  validateProductImages(input.images);
 
   const { error: imagesError } = await adminClient.from("product_images").insert(
     input.images.map((image) => ({
@@ -245,7 +240,7 @@ export async function updateProduct(
     discountPrice?: number | null;
     featured: boolean;
     gender: "men" | "women" | "unisex";
-    images: { displayOrder: number; imageUrl: string }[];
+    images: { displayOrder: number; imageUrl: string; altText?: string | null; storagePath?: string | null; fileSize?: number | null }[];
     name: string;
     price: number;
     slug?: string;
@@ -292,7 +287,7 @@ export async function updateProduct(
     throw deleteVariantsError;
   }
 
-  validateThreeImages(input.images);
+  validateProductImages(input.images);
 
   const { error: imagesError } = await adminClient.from("product_images").insert(
     input.images.map((image) => ({
@@ -365,6 +360,9 @@ export async function duplicateProduct(productId: string) {
     images: (record.product_images ?? []).map((image) => ({
       displayOrder: image.display_order,
       imageUrl: image.image_url,
+      altText: image.alt_text ?? null,
+      storagePath: image.storage_path ?? null,
+      fileSize: image.file_size ?? null,
     })),
     name: nextName,
     price: Number(record.price),

@@ -52,13 +52,15 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
+import { useImageUpload } from "@/hooks/use-image-upload";
+import { ImageUploadZone } from "./image-upload-zone";
+
 type ProductFormState = {
   categoryId: string;
   description: string;
   discountPrice: string;
   featured: boolean;
   gender: "men" | "women" | "unisex";
-  images: string[];
   name: string;
   price: string;
   slug: string;
@@ -72,7 +74,6 @@ type ProductFormState = {
 };
 
 function buildDefaultProductForm(product?: CatalogProduct): ProductFormState {
-  const images = Array.from({ length: 3 }, (_, index) => product?.images[index] ?? "");
   const variants =
     product?.variants.length
       ? product.variants.map((variant) => ({
@@ -96,7 +97,6 @@ function buildDefaultProductForm(product?: CatalogProduct): ProductFormState {
         : String(product.discountPrice),
     featured: product?.featured ?? false,
     gender: product?.gender ?? "unisex",
-    images,
     name: product?.name ?? "",
     price: product ? String(product.price) : "",
     slug: product?.slug ?? "",
@@ -141,7 +141,9 @@ function ProductEditorDialog({
   product,
 }: {
   categories: AdminCollectionRecord[];
-  product?: CatalogProduct;
+  product?: CatalogProduct & {
+    detailedImages?: Array<{ imageUrl: string; altText?: string | null; storagePath?: string | null; fileSize?: number | null; displayOrder: number }>;
+  };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -150,15 +152,32 @@ function ProductEditorDialog({
     buildDefaultProductForm(product),
   );
 
-  const isEditing = Boolean(product);
+  // Initialize custom hook with detailed database image rows
+  const initialImagesInput = product?.detailedImages 
+    ? product.detailedImages.map((img) => ({
+        imageUrl: img.imageUrl,
+        altText: img.altText || "",
+        displayOrder: img.displayOrder,
+      }))
+    : product?.images.map((img, i) => ({
+        imageUrl: img,
+        altText: "",
+        displayOrder: i,
+      })) || [];
 
-  const setImage = (index: number, value: string) => {
-    setFormState((current) => {
-      const nextImages = [...current.images];
-      nextImages[index] = value;
-      return { ...current, images: nextImages };
-    });
-  };
+  const {
+    images: uploadableImages,
+    addFiles,
+    removeImage,
+    replaceImage,
+    reorderImages,
+    retryUpload,
+    setAltText,
+    isUploading,
+    hasErrors,
+  } = useImageUpload(initialImagesInput);
+
+  const isEditing = Boolean(product);
 
   const setVariantValue = (
     index: number,
@@ -173,7 +192,33 @@ function ProductEditorDialog({
     }));
   };
 
+  const addVariant = () => {
+    setFormState((current) => ({
+      ...current,
+      variants: [...current.variants, { color: "Black", size: "S", sku: "", stock: "0" }],
+    }));
+  };
+
+  const removeVariant = (index: number) => {
+    setFormState((current) => ({
+      ...current,
+      variants: current.variants.filter((_, i) => i !== index),
+    }));
+  };
+
   const submit = () => {
+    // 1. Client-side checks
+    if (isUploading) {
+      toast.error("Please wait until all uploads are complete.");
+      return;
+    }
+
+    const completedImages = uploadableImages.filter((img) => img.status === "complete");
+    if (completedImages.length < 3) {
+      toast.error("At least 3 images are required.");
+      return;
+    }
+
     startTransition(async () => {
       try {
         const payload = {
@@ -184,9 +229,12 @@ function ProductEditorDialog({
             : null,
           featured: formState.featured,
           gender: formState.gender,
-          images: formState.images.map((imageUrl, index) => ({
+          images: completedImages.map((img, index) => ({
             displayOrder: index,
-            imageUrl,
+            imageUrl: img.publicUrl!,
+            altText: img.altText || null,
+            storagePath: img.storagePath || null,
+            fileSize: img.fileSize || null,
           })),
           name: formState.name,
           price: Number(formState.price),
@@ -230,7 +278,7 @@ function ProductEditorDialog({
             {isEditing ? "Edit Product" : "Create Product"}
           </DialogTitle>
           <DialogDescription className="text-[#a79f92]">
-            Configure catalog details, three editorial image slots, and variant-level inventory.
+            Configure catalog details, upload product media assets, and manage variant-level inventory.
           </DialogDescription>
         </DialogHeader>
 
@@ -368,29 +416,42 @@ function ProductEditorDialog({
 
           <div className="space-y-5">
             <div className="space-y-3">
-              <Label className="text-[#f5efe7]">Image Slots</Label>
-              {formState.images.map((image, index) => (
-                <Input
-                  key={index}
-                  value={image}
-                  onChange={(event) => setImage(index, event.target.value)}
-                  placeholder={`Image URL ${index + 1}`}
-                  className="border-white/10 bg-white/[0.04] text-white"
-                />
-              ))}
-              <p className="text-xs uppercase tracking-[0.2em] text-[#8e8678]">
-                Exactly 3 images are required by the current schema.
-              </p>
+              <Label className="text-[#f5efe7]">Images</Label>
+              <ImageUploadZone
+                images={uploadableImages}
+                onAddFiles={addFiles}
+                onRemoveImage={removeImage}
+                onReplaceImage={replaceImage}
+                onReorderImages={reorderImages}
+                onRetryUpload={retryUpload}
+                onSetAltText={setAltText}
+              />
             </div>
 
             <div className="space-y-3">
-              <Label className="text-[#f5efe7]">Variants</Label>
-              <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-[#f5efe7]">Variants</Label>
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  className="text-xs font-bold uppercase tracking-widest text-[#d8c0a1] hover:text-[#e5d4be] hover:underline"
+                >
+                  + Add Variant
+                </button>
+              </div>
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                 {formState.variants.map((variant, index) => (
                   <div
                     key={`${variant.sku}-${index}`}
-                    className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4 sm:grid-cols-2"
+                    className="relative grid gap-3 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4 sm:grid-cols-2"
                   >
+                    <button
+                      type="button"
+                      onClick={() => removeVariant(index)}
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-950 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white"
+                    >
+                      ×
+                    </button>
                     <Input
                       value={variant.size}
                       onChange={(event) =>
@@ -434,7 +495,7 @@ function ProductEditorDialog({
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={isPending}>
+          <Button onClick={submit} disabled={isPending || isUploading || hasErrors}>
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {isEditing ? "Save Changes" : "Create Product"}
           </Button>
@@ -448,6 +509,7 @@ function CollectionEditorDialog({
   collection,
 }: {
   collection?: AdminCollectionRecord;
+
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);

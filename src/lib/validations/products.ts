@@ -51,6 +51,9 @@ export const productImageSchema = z.object({
   id: uuidSchema.optional(),
   imageUrl: z.string().url(),
   displayOrder: z.coerce.number().int().min(0).default(0),
+  altText: z.string().trim().max(200).optional().nullable(),
+  storagePath: z.string().trim().max(500).optional().nullable(),
+  fileSize: z.coerce.number().int().min(0).optional().nullable(),
 });
 
 export const productMutationSchema = z.object({
@@ -69,7 +72,7 @@ export const productMutationSchema = z.object({
   gender: z.enum(["men", "women", "unisex"]).default("unisex"),
   featured: z.coerce.boolean().default(false),
   status: z.enum(["draft", "active", "archived"]).default("active"),
-  images: z.array(productImageSchema).min(1),
+  images: z.array(productImageSchema).min(3, "At least 3 images are required").max(10, "A maximum of 10 images is allowed"),
   variants: z.array(productVariantSchema).min(1),
 });
 
