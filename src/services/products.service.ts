@@ -3,9 +3,9 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 
 import { catalogCategories } from "@/lib/constants";
-import { hasSupabasePublicEnv } from "@/lib/env";
+import { hasSupabasePublicEnv, hasSupabaseServiceRoleKey } from "@/lib/env";
 import { mapCatalogProductToStorefront, mapProductRecord } from "@/lib/supabase/mappers";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabase/server";
 import type { CatalogProduct, DbCategory, PaginatedResult, ProductSearchParams } from "@/types/backend";
 import type { Product } from "@/types";
 import { createPaginationMeta } from "@/lib/utils/api";
@@ -61,8 +61,16 @@ function sortProductsByLatest(items: Product[]) {
   );
 }
 
+async function createStorefrontReadClient() {
+  if (hasSupabaseServiceRoleKey) {
+    return createSupabaseAdminClient();
+  }
+
+  return createSupabaseServerClient();
+}
+
 async function fetchProductRecords() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createStorefrontReadClient();
   const { data, error } = await supabase
     .from("products")
     .select(PRODUCT_SELECT)
@@ -137,7 +145,7 @@ export async function getProducts() {
 export async function searchProducts(
   params: ProductSearchParams = {},
 ): Promise<PaginatedResult<CatalogProduct>> {
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createStorefrontReadClient();
 
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? 12;
@@ -211,7 +219,7 @@ export async function getProductBySlug(slug: string) {
   }
 
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = await createStorefrontReadClient();
     const { data, error } = await supabase
       .from("products")
       .select(PRODUCT_SELECT)
@@ -231,7 +239,7 @@ export async function getProductBySlug(slug: string) {
 }
 
 export async function getProductCatalogBySlug(slug: string) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createStorefrontReadClient();
   const { data, error } = await supabase
     .from("products")
     .select(PRODUCT_SELECT)

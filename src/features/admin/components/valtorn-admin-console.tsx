@@ -100,7 +100,7 @@ function buildDefaultProductForm(product?: CatalogProduct): ProductFormState {
     name: product?.name ?? "",
     price: product ? String(product.price) : "",
     slug: product?.slug ?? "",
-    status: product?.status ?? "draft",
+    status: product?.status ?? "active",
     variants,
   };
 }

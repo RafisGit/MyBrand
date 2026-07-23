@@ -3,42 +3,19 @@ import { getProducts } from "@/services/products.service";
 import type { Product } from "@/types";
 
 function selectHomepageProducts(products: Product[]) {
-  const groups = [
-    ["tee", "t-shirt", "oversized"],
-    ["pant", "trouser", "cargo"],
-    ["shirt", "hoodie"],
-    ["bomber", "jacket", "streetwear", "polo"],
-  ];
-
+  const featuredProducts = [...products]
+    .filter((product) => product.featured)
+    .sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
+  const latestProducts = [...products].sort(
+    (left, right) =>
+      new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+  );
   const selected: Product[] = [];
 
-  for (const keywords of groups) {
-    const match = products.find((product) => {
-      if (selected.some((item) => item.id === product.id)) {
-        return false;
-      }
-
-      const haystack = `${product.name} ${product.category} ${product.collection}`.toLowerCase();
-      return keywords.some((keyword) => haystack.includes(keyword));
-    });
-
-    if (match) {
-      selected.push(match);
-    }
-  }
-
-  const rankedFallback = [...products].sort((left, right) => {
-    const rightScore = Number(right.bestSeller) + Number(right.featured);
-    const leftScore = Number(left.bestSeller) + Number(left.featured);
-
-    if (rightScore !== leftScore) {
-      return rightScore - leftScore;
-    }
-
-    return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
-  });
-
-  for (const product of rankedFallback) {
+  for (const product of [...featuredProducts, ...latestProducts]) {
     if (selected.length >= 4) {
       break;
     }

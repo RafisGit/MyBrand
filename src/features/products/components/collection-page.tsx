@@ -20,26 +20,13 @@ import { useWishlistStore } from "@/store/wishlist-store";
 import { AnimatedSection } from "@/components/shared/animated-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-type CollectionFilter =
-  | "all"
-  | "best-sellers"
-  | "new-arrivals"
-  | "oversized-fits"
-  | "pants"
-  | "t-shirts";
+import {
+  buildStorefrontDisplayMeta,
+  type CollectionFilter,
+  type ProductDisplayMeta,
+} from "@/lib/products/storefront-display";
 
 type SortOption = "featured" | "latest" | "price-asc" | "price-desc";
-
-type ProductDisplayMeta = {
-  accent: string;
-  badge: string;
-  categoryLabel: string;
-  filters: CollectionFilter[];
-  images: [string, string];
-  mood: string;
-  priority: number;
-};
 
 const filterOptions: { label: string; value: CollectionFilter }[] = [
   { label: "T-Shirts", value: "t-shirts" },
@@ -56,80 +43,6 @@ const sortOptions: { label: string; value: SortOption }[] = [
   { label: "Latest", value: "latest" },
 ];
 
-const collectionProductMeta: Record<string, ProductDisplayMeta> = {
-  "bone-heavyweight-hoodie": {
-    accent: "Premium fleece",
-    badge: "Core Layer",
-    categoryLabel: "Heavyweight Hoodie",
-    filters: ["all", "oversized-fits", "new-arrivals"],
-    images: [
-      "https://images.pexels.com/photos/4210866/pexels-photo-4210866.jpeg?cs=srgb&dl=pexels-karolina-grabowska-4210866.jpg&fm=jpg",
-      "https://images.pexels.com/photos/35586905/pexels-photo-35586905.jpeg?cs=srgb&dl=pexels-jc-qi-2157200577-35586905.jpg&fm=jpg",
-    ],
-    mood: "Soft structure",
-    priority: 4,
-  },
-  "charcoal-knit-polo": {
-    accent: "Sharp texture",
-    badge: "Everyday Essential",
-    categoryLabel: "Knit Essential",
-    filters: ["all", "new-arrivals"],
-    images: [
-      "https://images.pexels.com/photos/35586905/pexels-photo-35586905.jpeg?cs=srgb&dl=pexels-jc-qi-2157200577-35586905.jpg&fm=jpg",
-      "https://images.pexels.com/photos/7717491/pexels-photo-7717491.jpeg?cs=srgb&dl=pexels-marina-zasorina-7717491.jpg&fm=jpg",
-    ],
-    mood: "Dry-hand knit",
-    priority: 6,
-  },
-  "olive-transit-bomber": {
-    accent: "Utility volume",
-    badge: "Street Layer",
-    categoryLabel: "Transit Bomber",
-    filters: ["all", "best-sellers", "oversized-fits"],
-    images: [
-      "https://images.pexels.com/photos/35586905/pexels-photo-35586905.jpeg?cs=srgb&dl=pexels-jc-qi-2157200577-35586905.jpg&fm=jpg",
-      "https://images.pexels.com/photos/4210866/pexels-photo-4210866.jpeg?cs=srgb&dl=pexels-karolina-grabowska-4210866.jpg&fm=jpg",
-    ],
-    mood: "Muted outerwear",
-    priority: 5,
-  },
-  "sand-utility-shirt": {
-    accent: "Clean workwear",
-    badge: "Daily Rotation",
-    categoryLabel: "Utility Overshirt",
-    filters: ["all", "new-arrivals"],
-    images: [
-      "https://images.pexels.com/photos/35586905/pexels-photo-35586905.jpeg?cs=srgb&dl=pexels-jc-qi-2157200577-35586905.jpg&fm=jpg",
-      "https://images.pexels.com/photos/4862951/pexels-photo-4862951.jpeg?cs=srgb&dl=pexels-karolina-grabowska-4862951.jpg&fm=jpg",
-    ],
-    mood: "Matte hardware",
-    priority: 3,
-  },
-  "shadow-oversized-tee": {
-    accent: "320gsm cotton",
-    badge: "Launch Focus",
-    categoryLabel: "Oversized T-Shirt",
-    filters: ["all", "best-sellers", "new-arrivals", "oversized-fits", "t-shirts"],
-    images: [
-      "https://images.pexels.com/photos/35625406/pexels-photo-35625406.jpeg?cs=srgb&dl=pexels-joint-x-2158831780-35625406.jpg&fm=jpg",
-      "https://images.pexels.com/photos/7717491/pexels-photo-7717491.jpeg?cs=srgb&dl=pexels-marina-zasorina-7717491.jpg&fm=jpg",
-    ],
-    mood: "Heavyweight drape",
-    priority: 1,
-  },
-  "taupe-studio-trouser": {
-    accent: "Relaxed tailoring",
-    badge: "Precision Fit",
-    categoryLabel: "Premium Trouser",
-    filters: ["all", "new-arrivals", "pants"],
-    images: [
-      "https://images.pexels.com/photos/20094389/pexels-photo-20094389.jpeg?cs=srgb&dl=pexels-thomas-richard-945930195-20094389.jpg&fm=jpg",
-      "https://images.pexels.com/photos/4862951/pexels-photo-4862951.jpeg?cs=srgb&dl=pexels-karolina-grabowska-4862951.jpg&fm=jpg",
-    ],
-    mood: "Studio structure",
-    priority: 2,
-  },
-};
 
 function resolveDefaultFilter(category?: string, sort?: string): CollectionFilter {
   if (sort === "popular") {
@@ -323,17 +236,10 @@ export function CollectionPage({
   const deferredQuery = useDeferredValue(query);
 
   const curatedProducts = useMemo(() => {
-    return Object.entries(collectionProductMeta)
-      .map(([slug, meta]) => {
-        const product = products.find((item) => item.slug === slug);
-
-        if (!product) {
-          return null;
-        }
-
-        return { meta, product };
-      })
-      .filter((item): item is { meta: ProductDisplayMeta; product: Product } => Boolean(item));
+    return products.map((product, index) => ({
+      meta: buildStorefrontDisplayMeta(product, index + 1),
+      product,
+    }));
   }, [products]);
 
   const filteredProducts = useMemo(() => {
@@ -365,6 +271,18 @@ export function CollectionPage({
           new Date(right.product.createdAt).getTime() -
           new Date(left.product.createdAt).getTime()
         );
+      }
+
+      const featuredDifference =
+        Number(right.product.featured) - Number(left.product.featured);
+      if (featuredDifference !== 0) {
+        return featuredDifference;
+      }
+
+      const bestSellerDifference =
+        Number(right.product.bestSeller) - Number(left.product.bestSeller);
+      if (bestSellerDifference !== 0) {
+        return bestSellerDifference;
       }
 
       return left.meta.priority - right.meta.priority;
