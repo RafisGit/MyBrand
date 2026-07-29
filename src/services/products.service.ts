@@ -95,7 +95,7 @@ export const getCategories = unstable_cache(
     }
 
     try {
-      const supabase = await createSupabaseServerClient();
+      const supabase = await createStorefrontReadClient();
       const { data, error } = await supabase
         .from("categories")
         .select("*")
@@ -115,7 +115,7 @@ export const getCategories = unstable_cache(
     }
   },
   ["categories"],
-  { revalidate: 300 },
+  { revalidate: 300, tags: ["categories"] },
 );
 
 export async function getCatalogProducts(): Promise<CatalogProduct[]> {

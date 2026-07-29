@@ -53,8 +53,10 @@ function resolveDefaultFilter(category?: string, sort?: string): CollectionFilte
     return "new-arrivals";
   }
 
-  if ((category ?? "").toLowerCase() === "oversized") {
-    return "oversized-fits";
+  if (category) {
+    const catLower = category.toLowerCase();
+    if (catLower === "oversized") return "oversized-fits";
+    return catLower;
   }
 
   return "all";
@@ -219,10 +221,12 @@ function MobileCartBar() {
 }
 
 export function CollectionPage({
+  categories,
   defaultCategory,
   defaultSortParam,
   products,
 }: {
+  categories?: { id: string; name: string; slug: string }[];
   defaultCategory?: string;
   defaultSortParam?: string;
   products: Product[];
@@ -234,6 +238,24 @@ export function CollectionPage({
     resolveDefaultFilter(defaultCategory, defaultSortParam),
   );
   const deferredQuery = useDeferredValue(query);
+
+  const activeFilterOptions = useMemo(() => {
+    const list: { label: string; value: CollectionFilter }[] = [];
+    if (categories && categories.length > 0) {
+      for (const cat of categories) {
+        list.push({ label: cat.name, value: cat.slug || cat.name.toLowerCase() });
+      }
+    } else {
+      list.push(...filterOptions);
+    }
+    if (!list.some((item) => item.value === "new-arrivals")) {
+      list.push({ label: "New Arrivals", value: "new-arrivals" });
+    }
+    if (!list.some((item) => item.value === "best-sellers")) {
+      list.push({ label: "Best Sellers", value: "best-sellers" });
+    }
+    return list;
+  }, [categories]);
 
   const curatedProducts = useMemo(() => {
     return products.map((product, index) => ({
@@ -434,7 +456,7 @@ export function CollectionPage({
                   >
                     All Pieces
                   </button>
-                  {filterOptions.map((filter) => (
+                  {activeFilterOptions.map((filter) => (
                     <button
                       key={filter.value}
                       type="button"

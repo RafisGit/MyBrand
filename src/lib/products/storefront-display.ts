@@ -1,12 +1,7 @@
 import type { Product } from "@/types";
+import { toSlug } from "@/lib/utils/slug";
 
-export type CollectionFilter =
-  | "all"
-  | "best-sellers"
-  | "new-arrivals"
-  | "oversized-fits"
-  | "pants"
-  | "t-shirts";
+export type CollectionFilter = string;
 
 export type ProductDisplayMeta = {
   accent: string;
@@ -38,6 +33,15 @@ export function buildStorefrontDisplayMeta(
 ): ProductDisplayMeta {
   const haystack = `${product.name} ${product.category} ${product.collection}`.toLowerCase();
   const filters: CollectionFilter[] = ["all"];
+
+  if (product.category) {
+    filters.push(toSlug(product.category));
+    filters.push(product.category.toLowerCase());
+  }
+
+  if (product.collection) {
+    filters.push(toSlug(product.collection));
+  }
 
   if (
     haystack.includes("tee") ||

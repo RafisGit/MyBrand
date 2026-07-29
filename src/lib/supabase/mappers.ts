@@ -1,5 +1,5 @@
 import { products as seedProducts } from "@/lib/data/products";
-import type { DbCategory, DbProductImage, DbProductVariant, DbReview } from "@/types/backend";
+import type { DbCategory, DbProductVariant, DbReview } from "@/types/backend";
 import type { CatalogProduct } from "@/types/backend";
 import type { Product } from "@/types";
 

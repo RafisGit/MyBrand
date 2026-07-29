@@ -181,16 +181,17 @@ export function useImageUpload(initialImages: Array<{ imageUrl: string; altText?
         )
       );
       toast.success("Image uploaded successfully.");
-    } catch (err: any) {
-      if (err.message === "Upload cancelled.") {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Upload error";
+      if (errorMsg === "Upload cancelled.") {
         return; // Handled quietly
       }
       setImages((prev) =>
         prev.map((img) =>
-          img.id === image.id ? { ...img, status: "error", error: err.message } : img
+          img.id === image.id ? { ...img, status: "error", error: errorMsg } : img
         )
       );
-      toast.error(err.message || "Failed to upload image.");
+      toast.error(errorMsg);
     } finally {
       delete abortControllers.current[image.id];
     }

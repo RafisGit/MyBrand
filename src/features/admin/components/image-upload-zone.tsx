@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Upload, AlertCircle, RefreshCw } from "lucide-react";
+import { Upload } from "lucide-react";
 import { UploadableImage } from "@/hooks/use-image-upload";
 import { ImageUploadCard } from "./image-upload-card";
 

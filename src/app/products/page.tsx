@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { CollectionPage } from "@/features/products/components/collection-page";
-import { getProducts } from "@/services/products.service";
+import { getCategories, getProducts } from "@/services/products.service";
 
 export const metadata: Metadata = {
   title: "Collection",
@@ -14,7 +14,10 @@ export default async function ProductsPage({
 }: {
   searchParams?: Promise<{ category?: string; sort?: string }>;
 }) {
-  const products = await getProducts();
+  const [products, dbCategories] = await Promise.all([
+    getProducts(),
+    getCategories(),
+  ]);
   const params = searchParams ? await searchParams : undefined;
   const defaultCategory = params?.category;
   const defaultSortParam = params?.sort;
@@ -22,6 +25,7 @@ export default async function ProductsPage({
   return (
     <CollectionPage
       products={products}
+      categories={dbCategories}
       defaultCategory={defaultCategory}
       defaultSortParam={defaultSortParam}
     />

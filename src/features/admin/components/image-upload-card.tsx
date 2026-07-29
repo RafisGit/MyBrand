@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Trash2, RotateCw, GripVertical, FileImage, ShieldAlert, CheckCircle, Info } from "lucide-react";
+import { Trash2, RotateCw, GripVertical, ShieldAlert, Info } from "lucide-react";
 import { UploadableImage } from "@/hooks/use-image-upload";
 import { formatFileSize } from "@/lib/utils/image-upload";
 import { cn } from "@/lib/utils";
@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface ImageUploadCardProps {
   image: UploadableImage;
   index: number;
-  totalCount: number;
+  totalCount?: number;
   onRemove: (id: string) => void;
   onReplace: (id: string, file: File) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
@@ -18,7 +18,6 @@ interface ImageUploadCardProps {
 export function ImageUploadCard({
   image,
   index,
-  totalCount,
   onRemove,
   onReplace,
   onReorder,
