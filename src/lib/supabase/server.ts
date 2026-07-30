@@ -43,7 +43,7 @@ export async function createSupabaseServerClient(
             cookiesToSet.forEach(({ name, value, options: cookieOptions }) => {
               cookieStore.set(name, value, cookieOptions);
             });
-          } catch (error) {
+          } catch {
             // Safe to ignore in Server Components where cookies are read-only
           }
 
@@ -87,6 +87,20 @@ export function createSupabaseAdminClient() {
   );
 
   return adminClient;
+}
+
+export function createSupabasePublicClient() {
+  assertSupabaseEnv();
+  return createSupabaseClient<Database>(
+    publicEnv.supabaseUrl,
+    publicEnv.supabaseAnonKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    },
+  );
 }
 
 export const createClient = createSupabaseServerClient;

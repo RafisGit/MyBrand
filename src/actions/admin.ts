@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 import {
   archiveProduct,
@@ -8,10 +8,13 @@ import {
   createProduct,
   deleteCategory,
   deleteProduct,
+  deleteMediaAsset,
   duplicateProduct,
   updateCategory,
   updateProduct,
 } from "@/services/admin.service";
+import { updateHomepageSection } from "@/services/cms.service";
+import type { HomepageSection } from "@/types/cms";
 import { updateOrderStatus } from "@/services/orders.service";
 import { uploadAdminAsset } from "@/services/storage.service";
 import { categorySchema, productMutationSchema } from "@/lib/validations/products";
@@ -19,8 +22,11 @@ import { orderStatusSchema } from "@/lib/validations/orders";
 import { assertActionOrigin } from "@/lib/utils/security";
 
 function revalidateAdmin() {
+  revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/products");
+  revalidateTag("homepage");
+  revalidateTag("categories");
 }
 
 export async function createCategoryAction(input: {
@@ -125,4 +131,20 @@ export async function uploadAdminAssetAction(input: {
 }) {
   await assertActionOrigin();
   return uploadAdminAsset(input);
+}
+
+export async function updateHomepageSectionAction(
+  sectionKey: string,
+  payload: Partial<HomepageSection>
+) {
+  await assertActionOrigin();
+  const updated = await updateHomepageSection(sectionKey, payload);
+  revalidateAdmin();
+  return updated;
+}
+
+export async function deleteMediaAssetAction(id: string, path: string, bucket = "products") {
+  await assertActionOrigin();
+  await deleteMediaAsset(id, path, bucket);
+  revalidateAdmin();
 }

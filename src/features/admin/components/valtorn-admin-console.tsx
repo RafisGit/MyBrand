@@ -8,7 +8,6 @@ import {
   Archive,
   ArrowUpRight,
   Copy,
-  ImagePlus,
   Layers3,
   Loader2,
   PackageSearch,
@@ -17,7 +16,6 @@ import {
   ShieldCheck,
   ShoppingCart,
   Trash2,
-  UploadCloud,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -54,6 +52,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { ImageUploadZone } from "./image-upload-zone";
+import { HomepageEditor } from "./homepage-editor";
+import { MediaLibraryManager } from "./media-library-manager";
+
 
 type ProductFormState = {
   categoryId: string;
@@ -595,8 +596,6 @@ function CollectionEditorDialog({
 export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
   const router = useRouter();
   const [customerQuery, setCustomerQuery] = useState("");
-  const [uploading, startUploadTransition] = useTransition();
-  const [uploads, setUploads] = useState<Array<{ bucket: string; publicUrl: string }>>([]);
   const [orderSavingId, setOrderSavingId] = useState<string | null>(null);
   const [orderStatuses, setOrderStatuses] = useState<Record<string, AdminOrderRecord["status"]>>(
     () =>
@@ -633,47 +632,6 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
         toast.error(error instanceof Error ? error.message : "Unable to update order."),
       )
       .finally(() => setOrderSavingId(null));
-  };
-
-  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>, bucket: "products" | "banners") => {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    startUploadTransition(async () => {
-      try {
-        const formData = new FormData();
-        formData.append("bucket", bucket);
-        formData.append("folder", bucket === "products" ? "catalog" : "campaigns");
-        formData.append("file", file);
-
-        const response = await fetch("/api/admin/uploads", {
-          method: "POST",
-          body: formData,
-        });
-
-        const payload = (await response.json()) as {
-          data?: { bucket?: string; publicUrl?: string };
-          error?: string;
-        };
-
-        if (!response.ok || !payload.data?.publicUrl) {
-          throw new Error(payload.error ?? "Upload failed.");
-        }
-
-        setUploads((current) => [
-          { bucket, publicUrl: payload.data!.publicUrl! },
-          ...current,
-        ]);
-        toast.success("Asset uploaded.");
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Upload failed.");
-      } finally {
-        event.target.value = "";
-      }
-    });
   };
 
   return (
@@ -730,13 +688,18 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="h-auto flex-wrap gap-2 rounded-[1.8rem] border border-white/10 bg-[#121212] p-2">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="homepage">Homepage & Hero</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="collections">Collections</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="customers">Customers</TabsTrigger>
-          <TabsTrigger value="media">Media</TabsTrigger>
+          <TabsTrigger value="media">Media Library</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="homepage" className="space-y-6">
+          <HomepageEditor sections={[]} />
+        </TabsContent>
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-5 xl:grid-cols-4">
@@ -1243,82 +1206,7 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
         </TabsContent>
 
         <TabsContent value="media" className="space-y-6">
-          <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-            <SectionCard>
-              <div className="flex items-center gap-3">
-                <UploadCloud className="h-5 w-5 text-[#d8c0a1]" />
-                <h2 className="text-3xl font-semibold tracking-tight text-[#f7f2eb]">
-                  Media Library
-                </h2>
-              </div>
-              <p className="mt-4 text-sm leading-7 text-[#a69f94]">
-                Upload assets to Supabase Storage and reuse the generated URLs inside product forms and campaign sections.
-              </p>
-
-              <div className="mt-6 space-y-4">
-                {([
-                  ["products", "Catalog Assets"],
-                  ["banners", "Campaign Banners"],
-                ] as const).map(([bucket, label]) => (
-                  <label
-                    key={bucket}
-                    className="flex cursor-pointer flex-col gap-3 rounded-[1.6rem] border border-dashed border-white/12 bg-white/[0.03] p-5 transition hover:border-[#d8c0a1]/40"
-                  >
-                    <span className="text-sm font-semibold text-[#f7f2eb]">{label}</span>
-                    <span className="text-xs uppercase tracking-[0.18em] text-[#8d867a]">
-                      {uploading ? "Uploading..." : "Choose image"}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/avif"
-                      className="hidden"
-                      onChange={(event) => handleUpload(event, bucket)}
-                    />
-                  </label>
-                ))}
-              </div>
-            </SectionCard>
-
-            <SectionCard>
-              <div className="flex items-center gap-3">
-                <ImagePlus className="h-5 w-5 text-[#d8c0a1]" />
-                <h2 className="text-2xl font-semibold tracking-tight text-[#f7f2eb]">
-                  Recent Assets
-                </h2>
-              </div>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {[
-                  ...uploads,
-                  ...data.products
-                    .flatMap((product) =>
-                      product.images.map((image) => ({
-                        bucket: "products",
-                        publicUrl: image,
-                      })),
-                    )
-                    .slice(0, 6),
-                ]
-                  .slice(0, 9)
-                  .map((asset, index) => (
-                    <div
-                      key={`${asset.publicUrl}-${index}`}
-                      className="overflow-hidden rounded-[1.6rem] border border-white/8 bg-white/[0.03]"
-                    >
-                      <div
-                        className="aspect-[4/5] bg-cover bg-center"
-                        style={{ backgroundImage: `url(${asset.publicUrl})` }}
-                      />
-                      <div className="space-y-2 p-4">
-                        <p className="text-xs uppercase tracking-[0.2em] text-[#8d867a]">
-                          {asset.bucket}
-                        </p>
-                        <p className="truncate text-sm text-[#f7f2eb]">{asset.publicUrl}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </SectionCard>
-          </div>
+          <MediaLibraryManager initialAssets={[]} />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">

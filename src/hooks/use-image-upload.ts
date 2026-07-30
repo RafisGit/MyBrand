@@ -31,18 +31,20 @@ export interface UploadableImage {
 
 export function useImageUpload(initialImages: Array<{ imageUrl: string; altText?: string; displayOrder?: number }> = []) {
   const [images, setImages] = useState<UploadableImage[]>(() =>
-    initialImages.map((img, index) => ({
-      id: `existing-${index}-${Date.now()}`,
-      previewUrl: img.imageUrl,
-      publicUrl: img.imageUrl,
-      // Attempt to extract path from standard Supabase storage URL
-      storagePath: img.imageUrl.includes("/storage/v1/object/public/products/")
-        ? img.imageUrl.split("/storage/v1/object/public/products/")[1]?.split("?")[0]
-        : undefined,
-      status: "complete",
-      progress: 100,
-      altText: img.altText || "",
-    }))
+    initialImages.map((img, index) => {
+      const cleanUrl = img.imageUrl.replace("/storage/v1/render/image/public/", "/storage/v1/object/public/").split("?")[0];
+      return {
+        id: `existing-${index}-${Date.now()}`,
+        previewUrl: cleanUrl,
+        publicUrl: cleanUrl,
+        storagePath: cleanUrl.includes("/storage/v1/object/public/products/")
+          ? cleanUrl.split("/storage/v1/object/public/products/")[1]?.split("?")[0]
+          : undefined,
+        status: "complete",
+        progress: 100,
+        altText: img.altText || "",
+      };
+    })
   );
 
   const abortControllers = useRef<Record<string, AbortController>>({});
@@ -146,7 +148,7 @@ export function useImageUpload(initialImages: Array<{ imageUrl: string; altText?
               } else {
                 reject(new Error(res.error || "Invalid response format."));
               }
-            } catch (err) {
+            } catch {
               reject(new Error("Failed to parse server response."));
             }
           } else {

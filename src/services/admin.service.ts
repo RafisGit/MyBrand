@@ -10,6 +10,7 @@ import type { DbCategory, PaginatedResult } from "@/types/backend";
 import type { CatalogProduct } from "@/types/backend";
 import { createPaginationMeta } from "@/lib/utils/api";
 import { mapProductRecord } from "@/lib/supabase/mappers";
+import type { MediaAsset } from "@/types/cms";
 
 function validateProductImages(images: { displayOrder: number; imageUrl: string }[]) {
   if (images.length < 3) {
@@ -49,7 +50,7 @@ type AdminProductRecord = {
   id: string;
   name: string;
   price: number;
-  product_images: { display_order: number; image_url: string; alt_text?: string | null; storage_path?: string | null; file_size?: number | null }[] | null;
+  product_images: { display_order: number; image_url: string; alt_text?: string | null; storage_path?: string | null; file_size?: number | null; image_type?: string | null }[] | null;
   product_variants: {
     color: string;
     id: string;
@@ -70,6 +71,7 @@ function revalidateCommercePaths() {
   revalidatePath("/admin");
   revalidatePath("/account");
   revalidateTag("categories");
+  revalidateTag("homepage");
 }
 
 async function createAuthorizedAdminClient() {
@@ -96,7 +98,7 @@ export async function listAdminProducts(
   }
 
   return {
-    data: (data ?? []).map((record) => mapProductRecord(record as AdminProductRecord)),
+    data: (data ?? []).map((record) => mapProductRecord(record as unknown as AdminProductRecord)),
     meta: createPaginationMeta(page, pageSize, count ?? 0),
   };
 }
@@ -161,26 +163,29 @@ export async function deleteCategory(categoryId: string) {
   revalidateCommercePaths();
 }
 
-export async function createProduct(input: {
+type ProductInputType = {
   categoryId?: string | null;
+  collectionId?: string | null;
   description: string;
   discountPrice?: number | null;
   featured: boolean;
   gender: "men" | "women" | "unisex";
-  images: { displayOrder: number; imageUrl: string; altText?: string | null; storagePath?: string | null; fileSize?: number | null }[];
+  images: { displayOrder: number; imageUrl: string; altText?: string | null; storagePath?: string | null; fileSize?: number | null; imageType?: string | null }[];
   name: string;
   price: number;
   slug?: string;
   status: "draft" | "active" | "archived";
-  variants: { color: string; size: string; sku: string; stock: number }[];
-}) {
-  const adminClient = await createAuthorizedAdminClient();
+  variants: { color: string; size: string; sku: string; stock: number; barcode?: string | null; price?: number | null; salePrice?: number | null }[];
+};
 
+type AdminClient = Awaited<ReturnType<typeof createAuthorizedAdminClient>>;
+
+async function createProductFallback(adminClient: AdminClient, input: ProductInputType) {
   const { data: product, error: productError } = await adminClient
     .from("products")
     .insert({
       name: input.name,
-      slug: input.slug ?? toSlug(input.name),
+      slug: input.slug ? toSlug(input.slug) : toSlug(input.name),
       description: input.description,
       price: input.price,
       discount_price: input.discountPrice ?? null,
@@ -192,69 +197,44 @@ export async function createProduct(input: {
     .select("id")
     .maybeSingle();
 
-  if (productError) {
-    throw productError;
+  if (productError || !product) {
+    throw new AppError(productError?.message || "Could not create product", 500);
   }
 
-  if (!product) {
-    throw new AppError("Product could not be created.", 500);
+  if (input.images.length > 0) {
+    const { error: imagesError } = await adminClient.from("product_images").insert(
+      input.images.map((image) => ({
+        product_id: product.id,
+        image_url: image.imageUrl,
+        display_order: image.displayOrder,
+      })),
+    );
+    if (imagesError) console.warn("Fallback image insert warning:", imagesError.message);
   }
 
-  validateProductImages(input.images);
-
-  const { error: imagesError } = await adminClient.from("product_images").insert(
-    input.images.map((image) => ({
-      product_id: product.id,
-      image_url: image.imageUrl,
-      display_order: image.displayOrder,
-    })),
-  );
-
-  if (imagesError) {
-    throw imagesError;
-  }
-
-  const { error: variantsError } = await adminClient.from("product_variants").insert(
-    input.variants.map((variant) => ({
-      product_id: product.id,
-      size: variant.size,
-      color: variant.color,
-      stock: variant.stock,
-      sku: variant.sku,
-    })),
-  );
-
-  if (variantsError) {
-    throw variantsError;
+  if (input.variants.length > 0) {
+    const { error: variantsError } = await adminClient.from("product_variants").insert(
+      input.variants.map((variant) => ({
+        product_id: product.id,
+        size: variant.size,
+        color: variant.color,
+        stock: variant.stock,
+        sku: variant.sku,
+      })),
+    );
+    if (variantsError) console.warn("Fallback variant insert warning:", variantsError.message);
   }
 
   revalidateCommercePaths();
   return product;
 }
 
-export async function updateProduct(
-  productId: string,
-  input: {
-    categoryId?: string | null;
-    description: string;
-    discountPrice?: number | null;
-    featured: boolean;
-    gender: "men" | "women" | "unisex";
-    images: { displayOrder: number; imageUrl: string; altText?: string | null; storagePath?: string | null; fileSize?: number | null }[];
-    name: string;
-    price: number;
-    slug?: string;
-    status: "draft" | "active" | "archived";
-    variants: { color: string; size: string; sku: string; stock: number }[];
-  },
-) {
-  const adminClient = await createAuthorizedAdminClient();
-
+async function updateProductFallback(adminClient: AdminClient, productId: string, input: ProductInputType) {
   const { error: productError } = await adminClient
     .from("products")
     .update({
       name: input.name,
-      slug: input.slug ?? toSlug(input.name),
+      slug: input.slug ? toSlug(input.slug) : toSlug(input.name),
       description: input.description,
       price: input.price,
       discount_price: input.discountPrice ?? null,
@@ -269,53 +249,106 @@ export async function updateProduct(
     throw productError;
   }
 
-  const { error: deleteImagesError } = await adminClient
-    .from("product_images")
-    .delete()
-    .eq("product_id", productId);
+  await adminClient.from("product_images").delete().eq("product_id", productId);
+  await adminClient.from("product_variants").delete().eq("product_id", productId);
 
-  if (deleteImagesError) {
-    throw deleteImagesError;
+  if (input.images.length > 0) {
+    await adminClient.from("product_images").insert(
+      input.images.map((image) => ({
+        product_id: productId,
+        image_url: image.imageUrl,
+        display_order: image.displayOrder,
+      })),
+    );
   }
 
-  const { error: deleteVariantsError } = await adminClient
-    .from("product_variants")
-    .delete()
-    .eq("product_id", productId);
-
-  if (deleteVariantsError) {
-    throw deleteVariantsError;
-  }
-
-  validateProductImages(input.images);
-
-  const { error: imagesError } = await adminClient.from("product_images").insert(
-    input.images.map((image) => ({
-      product_id: productId,
-      image_url: image.imageUrl,
-      display_order: image.displayOrder,
-    })),
-  );
-
-  if (imagesError) {
-    throw imagesError;
-  }
-
-  const { error: variantsError } = await adminClient.from("product_variants").insert(
-    input.variants.map((variant) => ({
-      product_id: productId,
-      size: variant.size,
-      color: variant.color,
-      stock: variant.stock,
-      sku: variant.sku,
-    })),
-  );
-
-  if (variantsError) {
-    throw variantsError;
+  if (input.variants.length > 0) {
+    await adminClient.from("product_variants").insert(
+      input.variants.map((variant) => ({
+        product_id: productId,
+        size: variant.size,
+        color: variant.color,
+        stock: variant.stock,
+        sku: variant.sku,
+      })),
+    );
   }
 
   revalidateCommercePaths();
+}
+
+export async function createProduct(input: ProductInputType) {
+  validateProductImages(input.images);
+
+  const adminClient = await createAuthorizedAdminClient();
+
+  const payload = {
+    name: input.name,
+    slug: input.slug ? toSlug(input.slug) : toSlug(input.name),
+    description: input.description,
+    price: input.price,
+    discountPrice: input.discountPrice ?? null,
+    categoryId: input.categoryId ?? null,
+    collectionId: input.collectionId ?? null,
+    gender: input.gender,
+    featured: input.featured,
+    status: input.status,
+    images: input.images,
+    variants: input.variants,
+  };
+
+  const { data, error } = await adminClient.rpc("save_product_transactional", {
+    p_payload: payload,
+  });
+
+  if (error) {
+    if (error.code === "PGRST202" || error.message?.includes("Could not find the function") || error.message?.includes("schema cache")) {
+      return await createProductFallback(adminClient, input);
+    }
+    console.error("Transactional RPC create error:", error);
+    throw new AppError(error.message || "Failed to create product atomically", 500);
+  }
+
+  revalidateCommercePaths();
+  return data;
+}
+
+export async function updateProduct(productId: string, input: ProductInputType) {
+  validateProductImages(input.images);
+
+  const adminClient = await createAuthorizedAdminClient();
+
+  const payload = {
+    id: productId,
+    name: input.name,
+    slug: input.slug ? toSlug(input.slug) : toSlug(input.name),
+    description: input.description,
+    price: input.price,
+    discountPrice: input.discountPrice ?? null,
+    categoryId: input.categoryId ?? null,
+    collectionId: input.collectionId ?? null,
+    gender: input.gender,
+    featured: input.featured,
+    status: input.status,
+    images: input.images,
+    variants: input.variants,
+  };
+
+  const { data, error } = await adminClient.rpc("save_product_transactional", {
+    p_payload: payload,
+  });
+
+  if (error) {
+    if (error.code === "PGRST202" || error.message?.includes("Could not find the function") || error.message?.includes("schema cache")) {
+      await updateProductFallback(adminClient, productId, input);
+      return;
+    }
+    console.error("Transactional RPC update error:", error);
+    throw new AppError(error.message || "Failed to update product atomically", 500);
+  }
+
+  revalidateCommercePaths();
+  return data;
 }
 
 export async function deleteProduct(productId: string) {
@@ -347,7 +380,7 @@ export async function duplicateProduct(productId: string) {
     throw new AppError("Product not found.", 404);
   }
 
-  const record = data as AdminProductRecord;
+  const record = data as unknown as AdminProductRecord;
   const baseSlug = `${record.slug}-copy`;
   const nextName = `${record.name} Copy`;
 
@@ -363,6 +396,7 @@ export async function duplicateProduct(productId: string) {
       altText: image.alt_text ?? null,
       storagePath: image.storage_path ?? null,
       fileSize: image.file_size ?? null,
+      imageType: image.image_type ?? "gallery",
     })),
     name: nextName,
     price: Number(record.price),
@@ -439,4 +473,54 @@ export async function listAdminCollections() {
     productCount: productCounts.get(category.id) ?? 0,
     slug: category.slug,
   }));
+}
+
+// Media Library Operations
+export async function listMediaAssets(folder = "root", search?: string): Promise<MediaAsset[]> {
+  const adminClient = await createAuthorizedAdminClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (adminClient.from as any)("media_library").select("*").order("created_at", { ascending: false });
+
+  if (folder !== "all") {
+    query = query.eq("folder", folder);
+  }
+
+  if (search) {
+    query = query.ilike("filename", `%${search}%`);
+  }
+
+  const { data, error } = await query;
+  if (error || !data) {
+    return [];
+  }
+
+  return (data as Array<Record<string, unknown>>).map((item: Record<string, unknown>) => ({
+    id: String(item.id),
+    bucket: String(item.bucket),
+    path: String(item.path),
+    publicUrl: String(item.public_url),
+    filename: String(item.filename),
+    folder: String(item.folder),
+    fileSize: (item.file_size as number | null) ?? null,
+    width: (item.width as number | null) ?? null,
+    height: (item.height as number | null) ?? null,
+    mimeType: (item.mime_type as string | null) ?? null,
+    altText: (item.alt_text as string | null) ?? null,
+    caption: (item.caption as string | null) ?? null,
+    tags: (item.tags as string[]) || [],
+    createdAt: String(item.created_at),
+    updatedAt: String(item.updated_at),
+  }));
+}
+
+export async function deleteMediaAsset(id: string, storagePath: string, bucket = "products") {
+  const adminClient = await createAuthorizedAdminClient();
+  
+  await adminClient.storage.from(bucket).remove([storagePath]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (adminClient.from as any)("media_library").delete().eq("id", id);
+  
+  if (error) {
+    throw error;
+  }
 }

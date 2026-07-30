@@ -30,6 +30,14 @@ export type ProductRecordWithRelations = {
   updated_at: string;
 };
 
+export function normalizeImageUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  if (url.includes("/storage/v1/render/image/public/")) {
+    return url.replace("/storage/v1/render/image/public/", "/storage/v1/object/public/").split("?")[0];
+  }
+  return url;
+}
+
 export function mapProductRecord(record: ProductRecordWithRelations): CatalogProduct & {
   detailedImages?: Array<{ imageUrl: string; altText?: string | null; storagePath?: string | null; fileSize?: number | null; displayOrder: number }>;
 } {
@@ -37,16 +45,16 @@ export function mapProductRecord(record: ProductRecordWithRelations): CatalogPro
     (left, right) => left.display_order - right.display_order,
   );
   const seedMatch = seedProducts.find((seedProduct) => seedProduct.slug === record.slug);
-  const imageUrls = sortedImages.map((image) => image.image_url);
+  const imageUrls = sortedImages.map((image) => normalizeImageUrl(image.image_url));
 
   if (imageUrls.length < 3 && seedMatch) {
     for (let index = imageUrls.length; index < 3; index += 1) {
-      imageUrls.push(seedMatch.images[index] ?? seedMatch.images[0]);
+      imageUrls.push(normalizeImageUrl(seedMatch.images[index] ?? seedMatch.images[0]));
     }
   }
 
   const detailedImages = sortedImages.map((image) => ({
-    imageUrl: image.image_url,
+    imageUrl: normalizeImageUrl(image.image_url),
     altText: image.alt_text ?? null,
     storagePath: image.storage_path ?? null,
     fileSize: image.file_size ?? null,

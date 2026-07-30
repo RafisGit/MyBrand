@@ -1,5 +1,6 @@
 import { ValtornHome } from "@/features/home/components/valtorn-home";
 import { getProducts } from "@/services/products.service";
+import { getHomepageSections } from "@/services/cms.service";
 import type { Product } from "@/types";
 
 function selectHomepageProducts(products: Product[]) {
@@ -29,8 +30,11 @@ function selectHomepageProducts(products: Product[]) {
 }
 
 export default async function Home() {
-  const products = await getProducts();
+  const [products, sections] = await Promise.all([
+    getProducts(),
+    getHomepageSections(),
+  ]);
   const homepageProducts = selectHomepageProducts(products);
 
-  return <ValtornHome products={homepageProducts} />;
+  return <ValtornHome products={homepageProducts} sections={sections} />;
 }

@@ -353,6 +353,168 @@ export interface Database {
         };
         Relationships: [];
       };
+      homepage_sections: {
+        Row: {
+          id: string;
+          section_key: string;
+          title: string;
+          subtitle: string | null;
+          description: string | null;
+          button_text: string | null;
+          button_link: string | null;
+          images: Json;
+          config: Json;
+          visibility: boolean;
+          display_order: number;
+          status: string;
+          published_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          section_key: string;
+          title: string;
+          subtitle?: string | null;
+          description?: string | null;
+          button_text?: string | null;
+          button_link?: string | null;
+          images?: Json;
+          config?: Json;
+          visibility?: boolean;
+          display_order?: number;
+          status?: string;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          section_key?: string;
+          title?: string;
+          subtitle?: string | null;
+          description?: string | null;
+          button_text?: string | null;
+          button_link?: string | null;
+          images?: Json;
+          config?: Json;
+          visibility?: boolean;
+          display_order?: number;
+          status?: string;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      collections: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          collection_cover: string | null;
+          collection_banner: string | null;
+          is_featured: boolean;
+          is_homepage: boolean;
+          is_landing: boolean;
+          display_order: number;
+          visibility: boolean;
+          status: string;
+          published_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          collection_cover?: string | null;
+          collection_banner?: string | null;
+          is_featured?: boolean;
+          is_homepage?: boolean;
+          is_landing?: boolean;
+          display_order?: number;
+          visibility?: boolean;
+          status?: string;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          collection_cover?: string | null;
+          collection_banner?: string | null;
+          is_featured?: boolean;
+          is_homepage?: boolean;
+          is_landing?: boolean;
+          display_order?: number;
+          visibility?: boolean;
+          status?: string;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      media_library: {
+        Row: {
+          id: string;
+          bucket: string;
+          path: string;
+          public_url: string;
+          filename: string;
+          folder: string;
+          file_size: number | null;
+          width: number | null;
+          height: number | null;
+          mime_type: string | null;
+          alt_text: string | null;
+          caption: string | null;
+          tags: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          bucket?: string;
+          path: string;
+          public_url: string;
+          filename: string;
+          folder?: string;
+          file_size?: number | null;
+          width?: number | null;
+          height?: number | null;
+          mime_type?: string | null;
+          alt_text?: string | null;
+          caption?: string | null;
+          tags?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          bucket?: string;
+          path?: string;
+          public_url?: string;
+          filename?: string;
+          folder?: string;
+          file_size?: number | null;
+          width?: number | null;
+          height?: number | null;
+          mime_type?: string | null;
+          alt_text?: string | null;
+          caption?: string | null;
+          tags?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       wishlist: {
         Row: {
           id: string;
@@ -416,6 +578,12 @@ export interface Database {
       is_admin: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
+      };
+      save_product_transactional: {
+        Args: {
+          p_payload: Json;
+        };
+        Returns: Json;
       };
       search_products: {
         Args: {

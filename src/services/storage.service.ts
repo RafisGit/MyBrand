@@ -11,17 +11,10 @@ function sanitizeFileName(value: string) {
 export function getStoragePublicUrl(
   bucket: "products" | "banners" | "avatars",
   path: string,
-  options?: {
-    height?: number;
-    quality?: number;
-    width?: number;
-  },
 ) {
   const adminClient = createSupabaseAdminClient();
 
-  return adminClient.storage.from(bucket).getPublicUrl(path, {
-    transform: options,
-  }).data.publicUrl;
+  return adminClient.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }
 
 export async function uploadAdminAsset(input: {
@@ -50,10 +43,7 @@ export async function uploadAdminAsset(input: {
 
   return {
     path: filePath,
-    publicUrl: getStoragePublicUrl(input.bucket, filePath, {
-      quality: 80,
-      width: 1600,
-    }),
+    publicUrl: getStoragePublicUrl(input.bucket, filePath),
   };
 }
 
@@ -74,11 +64,7 @@ export async function uploadAvatarAsset(file: File) {
     throw error;
   }
 
-  const avatarUrl = getStoragePublicUrl("avatars", filePath, {
-    height: 256,
-    quality: 80,
-    width: 256,
-  });
+  const avatarUrl = getStoragePublicUrl("avatars", filePath);
 
   const { error: updateError } = await adminClient
     .from("users")
