@@ -478,8 +478,7 @@ export async function listAdminCollections() {
 // Media Library Operations
 export async function listMediaAssets(folder = "root", search?: string): Promise<MediaAsset[]> {
   const adminClient = await createAuthorizedAdminClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (adminClient.from as any)("media_library").select("*").order("created_at", { ascending: false });
+  let query = adminClient.from("media_library").select("*").order("created_at", { ascending: false });
 
   if (folder !== "all") {
     query = query.eq("folder", folder);
@@ -494,22 +493,22 @@ export async function listMediaAssets(folder = "root", search?: string): Promise
     return [];
   }
 
-  return (data as Array<Record<string, unknown>>).map((item: Record<string, unknown>) => ({
-    id: String(item.id),
-    bucket: String(item.bucket),
-    path: String(item.path),
-    publicUrl: String(item.public_url),
-    filename: String(item.filename),
-    folder: String(item.folder),
-    fileSize: (item.file_size as number | null) ?? null,
-    width: (item.width as number | null) ?? null,
-    height: (item.height as number | null) ?? null,
-    mimeType: (item.mime_type as string | null) ?? null,
-    altText: (item.alt_text as string | null) ?? null,
-    caption: (item.caption as string | null) ?? null,
-    tags: (item.tags as string[]) || [],
-    createdAt: String(item.created_at),
-    updatedAt: String(item.updated_at),
+  return data.map((item) => ({
+    id: item.id,
+    bucket: item.bucket,
+    path: item.path,
+    publicUrl: item.public_url,
+    filename: item.filename,
+    folder: item.folder,
+    fileSize: item.file_size ?? null,
+    width: item.width ?? null,
+    height: item.height ?? null,
+    mimeType: item.mime_type ?? null,
+    altText: item.alt_text ?? null,
+    caption: item.caption ?? null,
+    tags: item.tags || [],
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
   }));
 }
 
@@ -517,8 +516,7 @@ export async function deleteMediaAsset(id: string, storagePath: string, bucket =
   const adminClient = await createAuthorizedAdminClient();
   
   await adminClient.storage.from(bucket).remove([storagePath]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (adminClient.from as any)("media_library").delete().eq("id", id);
+  const { error } = await adminClient.from("media_library").delete().eq("id", id);
   
   if (error) {
     throw error;

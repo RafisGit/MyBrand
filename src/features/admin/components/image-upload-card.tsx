@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import Image from "next/image";
 import { Trash2, RotateCw, GripVertical, ShieldAlert, Info } from "lucide-react";
 import { UploadableImage } from "@/hooks/use-image-upload";
 import { formatFileSize } from "@/lib/utils/image-upload";
@@ -79,15 +80,15 @@ export function ImageUploadCard({
 
       {/* Image Preview Window */}
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[1.3rem] bg-black/40">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={image.previewUrl}
           alt={image.altText || "Product preview"}
+          fill
+          unoptimized
           className={cn(
-            "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105",
+            "object-cover transition-transform duration-500 group-hover:scale-105",
             ["validating", "compressing", "uploading"].includes(image.status) && "opacity-40 blur-sm"
           )}
-          loading="lazy"
         />
 
         {/* Hero badge for primary (display order 0) */}
