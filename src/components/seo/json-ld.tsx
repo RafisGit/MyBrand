@@ -22,6 +22,30 @@ export function OrganizationJsonLd() {
   );
 }
 
+export function BreadcrumbJsonLd({
+  items,
+}: {
+  items: { name: string; item: string }[];
+}) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((entry, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: entry.name,
+      item: entry.item,
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 export function ProductJsonLd({
   name,
   description,
@@ -30,6 +54,7 @@ export function ProductJsonLd({
   currency = "USD",
   sku,
   availability = "InStock",
+  url,
 }: {
   name: string;
   description: string;
@@ -38,6 +63,7 @@ export function ProductJsonLd({
   currency?: string;
   sku?: string;
   availability?: string;
+  url?: string;
 }) {
   const schema = {
     "@context": "https://schema.org/",
@@ -52,9 +78,10 @@ export function ProductJsonLd({
     },
     offers: {
       "@type": "Offer",
-      url: "https://valtorn.com/products",
+      url: url || "https://valtorn.com/products",
       priceCurrency: currency,
       price: price.toFixed(2),
+      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       availability: `https://schema.org/${availability}`,
       itemCondition: "https://schema.org/NewCondition",
     },

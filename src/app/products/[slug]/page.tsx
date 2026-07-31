@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { ProductDetailView } from "@/features/products/components/product-detail-view";
 import { ProductCard } from "@/features/products/components/product-card";
+import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { getProductBySlug, getRelatedProducts } from "@/services/products.service";
+import { siteConfig } from "@/lib/constants";
 
 export async function generateMetadata({
   params,
@@ -20,9 +22,29 @@ export async function generateMetadata({
     };
   }
 
+  const productUrl = `${siteConfig.url}/products/${product.slug}`;
+
   return {
     title: product.name,
     description: product.seoDescription,
+    alternates: {
+      canonical: productUrl,
+    },
+    openGraph: {
+      title: `${product.name} | ${siteConfig.name}`,
+      description: product.seoDescription,
+      url: productUrl,
+      images: product.images.map((img) => ({
+        url: img,
+        alt: product.name,
+      })),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description: product.seoDescription,
+      images: product.images[0] ? [product.images[0]] : [],
+    },
   };
 }
 
@@ -39,9 +61,27 @@ export default async function ProductPage({
   }
 
   const relatedProducts = await getRelatedProducts(product.slug, product.category);
+  const productUrl = `${siteConfig.url}/products/${product.slug}`;
 
   return (
     <div className="page-shell">
+      <ProductJsonLd
+        name={product.name}
+        description={product.seoDescription}
+        images={product.images}
+        price={product.price}
+        sku={product.slug}
+        url={productUrl}
+        availability={product.stock > 0 ? "InStock" : "OutOfStock"}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Home", item: siteConfig.url },
+          { name: "Collection", item: `${siteConfig.url}/products` },
+          { name: product.name, item: productUrl },
+        ]}
+      />
+
       <ProductDetailView product={product} />
 
       <section className="space-y-10">

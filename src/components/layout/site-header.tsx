@@ -42,7 +42,7 @@ export function SiteHeader() {
       >
         <div className="flex items-center gap-3">
           <MobileNav />
-          <Link href="/" className="group inline-flex flex-col">
+          <Link href="/" className="group inline-flex flex-col rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black">
             <span className="text-sm font-semibold uppercase tracking-[0.38em] text-black">
               VALTORN
             </span>
@@ -57,7 +57,7 @@ export function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-600 transition hover:text-black"
+              className="rounded-sm text-xs font-semibold uppercase tracking-[0.24em] text-zinc-600 transition hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             >
               {item.label}
             </Link>

@@ -336,7 +336,7 @@ export function CollectionPage({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.38em] text-[#ccb79d]">
                   VALTORN COLLECTION
                 </p>
-                <h1 className="text-5xl font-semibold tracking-[-0.08em] text-[#f7f2eb] sm:text-6xl lg:text-[5.1rem]">
+                <h1 className="text-3xl font-semibold tracking-[-0.08em] text-[#f7f2eb] sm:text-5xl md:text-6xl lg:text-[5.1rem]">
                   Minimal Streetwear Essentials.
                 </h1>
                 <p className="max-w-xl text-base leading-8 text-[#b6afa4] sm:text-lg">
@@ -443,12 +443,12 @@ export function CollectionPage({
                 </button>
               </div>
 
-              <div className="overflow-x-auto pb-1">
-                <div className="flex min-w-max gap-3">
+              <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+                <div className="flex min-w-max gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => startTransition(() => setActiveFilter("all"))}
-                    className={`rounded-full px-5 py-3 text-xs font-semibold uppercase tracking-[0.24em] transition ${
+                    className={`rounded-full px-4 py-3 sm:px-5 text-xs font-semibold uppercase tracking-[0.24em] transition ${
                       activeFilter === "all"
                         ? "bg-[#f5efe7] text-black"
                         : "border border-white/10 bg-white/[0.04] text-[#b0a99d] hover:bg-white/[0.08] hover:text-[#f5efe7]"
@@ -461,7 +461,7 @@ export function CollectionPage({
                       key={filter.value}
                       type="button"
                       onClick={() => startTransition(() => setActiveFilter(filter.value))}
-                      className={`rounded-full px-5 py-3 text-xs font-semibold uppercase tracking-[0.24em] transition ${
+                      className={`rounded-full px-4 py-3 sm:px-5 text-xs font-semibold uppercase tracking-[0.24em] transition ${
                         activeFilter === filter.value
                           ? "bg-[#f5efe7] text-black"
                           : "border border-white/10 bg-white/[0.04] text-[#b0a99d] hover:bg-white/[0.08] hover:text-[#f5efe7]"
@@ -506,17 +506,17 @@ export function CollectionPage({
               <p className="text-[11px] uppercase tracking-[0.28em] text-[#8d7d6b]">
                 Showing
               </p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em] text-[#111111] sm:text-4xl">
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[#111111] sm:text-3xl md:text-4xl">
                 {filteredProducts.length} curated pieces
               </h2>
             </div>
-            <p className="max-w-lg text-right text-sm leading-7 text-[#5f5a53]">
+            <p className="hidden max-w-lg text-right text-sm leading-7 text-[#5f5a53] sm:block">
               Built around calm studio imagery, clean typography, and enough breathing room for the product to lead.
             </p>
           </div>
 
           {filteredProducts.length ? (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
               {filteredProducts.map((entry) => (
                 <CollectionProductCard key={entry.product.id} entry={entry} />
               ))}
@@ -548,7 +548,7 @@ export function CollectionPage({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.38em] text-[#ccb79d]">
                   Featured Drop
                 </p>
-                <h2 className="text-4xl font-semibold tracking-[-0.06em] text-[#f7f2eb] sm:text-5xl lg:text-[4rem]">
+                <h2 className="text-3xl font-semibold tracking-[-0.06em] text-[#f7f2eb] sm:text-4xl md:text-5xl lg:text-[4rem]">
                   Built Different.
                 </h2>
                 <p className="max-w-xl text-base leading-8 text-[#d1c9bd]">

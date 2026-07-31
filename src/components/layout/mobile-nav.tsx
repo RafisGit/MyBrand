@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 
 import { navigationLinks } from "@/lib/constants";
@@ -15,8 +17,28 @@ import {
 } from "@/components/ui/sheet";
 
 export function MobileNav() {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Auto-close drawer on route change
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Body scroll locking
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
           aria-label="Open navigation menu"
@@ -35,20 +57,30 @@ export function MobileNav() {
 
         <div className="mt-8 flex flex-1 flex-col justify-between">
           <nav className="space-y-2">
-            {navigationLinks.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="block rounded-2xl px-4 py-4 text-base font-medium tracking-[0.14em] uppercase text-white/85 transition hover:bg-white/6 hover:text-white"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navigationLinks.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className={`flex min-h-[48px] items-center rounded-2xl px-4 py-3 text-base font-medium tracking-[0.14em] uppercase transition ${
+                    isActive
+                      ? "bg-white/15 text-white"
+                      : "text-white/85 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="space-y-4">
-            <Button asChild className="w-full bg-white text-black hover:bg-zinc-200">
-              <Link href="/products">Shop Collection</Link>
+            <Button asChild className="w-full min-h-[48px] bg-white text-black hover:bg-zinc-200">
+              <Link href="/products" onClick={() => setOpen(false)}>
+                Shop Collection
+              </Link>
             </Button>
             <p className="px-2 text-xs uppercase tracking-[0.22em] text-zinc-500">
               Sign in from the user icon in the header.

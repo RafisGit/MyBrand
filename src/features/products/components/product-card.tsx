@@ -32,13 +32,13 @@ export function ProductCard({
         {product.featured ? <Badge variant="secondary">Featured</Badge> : null}
       </div>
 
-      <div className="absolute right-4 top-4 z-10 flex items-center gap-2 opacity-0 transition duration-300 group-hover:opacity-100">
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-2 opacity-100 transition duration-300 lg:opacity-0 lg:group-hover:opacity-100">
         {showQuickView ? (
           <QuickViewDialog product={product}>
             <button
               type="button"
               aria-label={`Quick view ${product.name}`}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/88 text-black backdrop-blur transition hover:bg-black hover:text-white"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/88 text-black backdrop-blur transition hover:bg-black hover:text-white"
             >
               <Eye className="h-4 w-4" />
             </button>
@@ -48,7 +48,7 @@ export function ProductCard({
           type="button"
           aria-label={`Toggle wishlist for ${product.name}`}
           onClick={() => toggleItem(product.id)}
-          className={`inline-flex h-10 w-10 items-center justify-center rounded-full backdrop-blur transition ${
+          className={`inline-flex h-11 w-11 items-center justify-center rounded-full backdrop-blur transition ${
             isWishlisted
               ? "bg-black text-white"
               : "bg-white/88 text-black hover:bg-black hover:text-white"
@@ -65,7 +65,7 @@ export function ProductCard({
             alt={product.name}
             fill
             className="object-cover transition duration-700 group-hover:scale-[1.03]"
-            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 40vw, 100vw"
+            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
           />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04),transparent_40%)]" />
           {product.images[1] ? (
@@ -74,16 +74,16 @@ export function ProductCard({
               alt={`${product.name} alternate view`}
               fill
               className="object-cover opacity-0 transition duration-700 group-hover:opacity-100"
-              sizes="(min-width: 1280px) 25vw, (min-width: 768px) 40vw, 100vw"
+              sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
             />
           ) : null}
         </div>
       </Link>
 
-      <div className="space-y-3 p-6">
+      <div className="space-y-3 p-4 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-lg font-semibold tracking-tight text-black">
+            <p className="text-base sm:text-lg font-semibold tracking-tight text-black">
               {product.name}
             </p>
             <p className="mt-1 text-xs uppercase tracking-[0.24em] text-zinc-500">
