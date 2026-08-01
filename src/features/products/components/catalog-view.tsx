@@ -106,11 +106,11 @@ export function CatalogView({
             onChange={(event) =>
               startTransition(() => setCategory(event.target.value))
             }
-            className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none"
+            className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm text-black outline-none cursor-pointer"
           >
-            <option value="">All categories</option>
+            <option value="" className="bg-white text-black">All categories</option>
             {categories.map((item) => (
-              <option key={item} value={item}>
+              <option key={item} value={item} className="bg-white text-black">
                 {item}
               </option>
             ))}
@@ -121,11 +121,11 @@ export function CatalogView({
             onChange={(event) =>
               startTransition(() => setSize(event.target.value))
             }
-            className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none"
+            className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm text-black outline-none cursor-pointer"
           >
-            <option value="">All sizes</option>
+            <option value="" className="bg-white text-black">All sizes</option>
             {sizeScale.map((item) => (
-              <option key={item} value={item}>
+              <option key={item} value={item} className="bg-white text-black">
                 {item}
               </option>
             ))}
@@ -136,11 +136,11 @@ export function CatalogView({
             onChange={(event) =>
               startTransition(() => setColor(event.target.value))
             }
-            className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none"
+            className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm text-black outline-none cursor-pointer"
           >
-            <option value="">All colors</option>
+            <option value="" className="bg-white text-black">All colors</option>
             {colorScale.map((item) => (
-              <option key={item} value={item}>
+              <option key={item} value={item} className="bg-white text-black">
                 {item}
               </option>
             ))}
@@ -153,10 +153,10 @@ export function CatalogView({
                 () => setSort(event.target.value as (typeof sortLabels)[number]["value"]),
               )
             }
-            className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm outline-none"
+            className="h-12 rounded-2xl border border-black/10 bg-white px-4 text-sm text-black outline-none cursor-pointer"
           >
             {sortLabels.map((item) => (
-              <option key={item.value} value={item.value}>
+              <option key={item.value} value={item.value} className="bg-white text-black">
                 {item.label}
               </option>
             ))}

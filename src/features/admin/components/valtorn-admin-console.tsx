@@ -337,11 +337,11 @@ function ProductEditorDialog({
                       categoryId: event.target.value,
                     }))
                   }
-                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none cursor-pointer"
                 >
-                  <option value="">Unassigned</option>
+                  <option value="" className="bg-[#121212] text-[#f5efe7]">Unassigned</option>
                   {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
+                    <option key={category.id} value={category.id} className="bg-[#121212] text-[#f5efe7]">
                       {category.name}
                     </option>
                   ))}
@@ -357,13 +357,25 @@ function ProductEditorDialog({
                       status: event.target.value as ProductFormState["status"],
                     }))
                   }
-                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none cursor-pointer"
                 >
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                  <option value="archived">Archived</option>
+                  <option value="draft" className="bg-[#121212] text-[#f5efe7]">Draft</option>
+                  <option value="active" className="bg-[#121212] text-[#f5efe7]">Active</option>
+                  <option value="archived" className="bg-[#121212] text-[#f5efe7]">Archived</option>
                 </select>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[#f5efe7]">Description</Label>
+              <Textarea
+                value={formState.description}
+                onChange={(event) =>
+                  setFormState((current) => ({ ...current, description: event.target.value }))
+                }
+                rows={2}
+                placeholder="Product description..."
+                className="border-white/10 bg-white/[0.04] text-white placeholder:text-white/30"
+              />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
@@ -399,16 +411,16 @@ function ProductEditorDialog({
                       gender: event.target.value as ProductFormState["gender"],
                     }))
                   }
-                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none"
+                  className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none cursor-pointer"
                 >
-                  <option value="unisex">Unisex</option>
-                  <option value="men">Men</option>
-                  <option value="women">Women</option>
+                  <option value="unisex" className="bg-[#121212] text-[#f5efe7]">Unisex</option>
+                  <option value="men" className="bg-[#121212] text-[#f5efe7]">Men</option>
+                  <option value="women" className="bg-[#121212] text-[#f5efe7]">Women</option>
                 </select>
               </div>
             </div>
 
-            <label className="flex items-center gap-3 text-sm text-[#d3ccbf]">
+            <label className="flex items-center gap-3 text-sm text-[#d3ccbf] cursor-pointer">
               <input
                 type="checkbox"
                 checked={formState.featured}
@@ -418,7 +430,7 @@ function ProductEditorDialog({
                     featured: event.target.checked,
                   }))
                 }
-                className="h-4 w-4 accent-white"
+                className="h-4 w-4 accent-white cursor-pointer"
               />
               Mark as featured
             </label>
@@ -501,11 +513,20 @@ function ProductEditorDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+        <div className="flex justify-end gap-3 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            className="border-white/15 bg-white/5 text-[#f5efe7] hover:bg-white/10 hover:text-white"
+          >
             Cancel
           </Button>
-          <Button onClick={submit} disabled={isPending || isUploading || hasErrors}>
+          <Button
+            onClick={submit}
+            disabled={isPending || isUploading || hasErrors}
+            className="bg-[#f5efe7] text-black hover:bg-white font-bold disabled:opacity-50"
+          >
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {isEditing ? "Save Changes" : "Create Product"}
           </Button>
@@ -588,11 +609,16 @@ function CollectionEditorDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+        <div className="flex justify-end gap-3 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            className="border-white/15 bg-white/5 text-[#f5efe7] hover:bg-white/10 hover:text-white"
+          >
             Cancel
           </Button>
-          <Button onClick={submit} disabled={isPending}>
+          <Button onClick={submit} disabled={isPending} className="bg-[#f5efe7] text-black hover:bg-white font-bold disabled:opacity-50">
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {isEditing ? "Save Changes" : "Create Collection"}
           </Button>
@@ -1112,11 +1138,11 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
                               [order.id]: event.target.value as AdminOrderRecord["status"],
                             }))
                           }
-                          className="h-10 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none"
+                          className="h-10 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-white outline-none cursor-pointer"
                         >
                           {["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"].map(
                             (status) => (
-                              <option key={status} value={status}>
+                              <option key={status} value={status} className="bg-[#121212] text-[#f5efe7]">
                                 {status}
                               </option>
                             ),

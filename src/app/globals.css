@@ -45,3 +45,15 @@ select {
     opacity 180ms ease,
     transform 180ms ease;
 }
+
+select option {
+  background-color: #121212;
+  color: #f5efe7;
+}
+
+select.bg-white option,
+select.bg-zinc-100 option {
+  background-color: #ffffff;
+  color: #090909;
+}
+
