@@ -44,7 +44,11 @@ export const productVariantSchema = z.object({
   size: z.string().trim().min(1).max(20),
   color: z.string().trim().min(1).max(40),
   stock: z.coerce.number().int().min(0),
-  sku: z.string().trim().min(3).max(80),
+  sku: z
+    .string()
+    .trim()
+    .optional()
+    .transform((val) => (val && val.length >= 3 ? val : `VAL-${Math.random().toString(36).substring(2, 8).toUpperCase()}`)),
 });
 
 export const productImageSchema = z.object({
@@ -65,7 +69,7 @@ export const productMutationSchema = z.object({
     .max(180)
     .optional()
     .transform((value) => (value ? toSlug(value) : undefined)),
-  description: z.string().trim().min(20).max(5000),
+  description: z.string().trim().max(5000).optional().default(""),
   price: z.coerce.number().min(0),
   discountPrice: z.coerce.number().min(0).nullable().optional(),
   categoryId: uuidSchema.nullable().optional(),

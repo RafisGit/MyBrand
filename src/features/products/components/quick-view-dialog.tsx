@@ -58,7 +58,6 @@ export function QuickViewDialog({
                 <span className="block text-sm font-semibold uppercase tracking-[0.18em] text-black">
                   {formatCurrency(product.price)}
                 </span>
-                <span className="block">{product.shortDescription}</span>
               </DialogDescription>
             </DialogHeader>
 

@@ -5,10 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
-  ShieldCheck,
-  Shirt,
   ShoppingBag,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,23 +27,7 @@ const defaultHeroAssets = {
     "https://images.pexels.com/photos/35586905/pexels-photo-35586905.jpeg?cs=srgb&dl=pexels-jc-qi-2157200577-35586905.jpg&fm=jpg",
 };
 
-const featureBlocks = [
-  {
-    title: "Premium Fabric",
-    description: "Heavyweight cotton, structured drape, and soft-touch finishing that still feels effortless.",
-    icon: Shirt,
-  },
-  {
-    title: "Minimal Streetwear",
-    description: "Clean silhouettes, quiet tones, and modern proportions built for repeat wear.",
-    icon: Sparkles,
-  },
-  {
-    title: "Built For Daily Wear",
-    description: "Easy layering, durable construction, and confident comfort from morning to late night.",
-    icon: ShieldCheck,
-  },
-] as const;
+
 
 function LaunchProductCard({
   product,
@@ -59,7 +40,9 @@ function LaunchProductCard({
 }) {
   const addItem = useCartStore((state) => state.addItem);
 
-  const handleQuickAdd = () => {
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (product.stock < 1) {
       toast.info("This piece is currently unavailable.");
       return;
@@ -79,59 +62,66 @@ function LaunchProductCard({
     <motion.article
       whileHover={{ y: -6 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="group overflow-hidden rounded-[2rem] border border-black/8 bg-white shadow-[0_38px_120px_-80px_rgba(0,0,0,0.28)]"
+      className="group relative overflow-hidden rounded-[2rem] border border-black/8 bg-white shadow-[0_38px_120px_-80px_rgba(0,0,0,0.28)] flex flex-col justify-between"
     >
-      <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-[4/5] overflow-hidden bg-[#111]">
+      <div className="relative aspect-[4/5] overflow-hidden bg-[#111]">
+        <Link href={`/products/${product.slug}`} className="block h-full w-full">
           <Image
             src={image || product.images[0] || defaultHeroAssets.primary}
             alt={product.name}
             fill
-            className="object-cover transition duration-700 group-hover:scale-[1.04]"
+            className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
             sizes="(min-width: 1280px) 24vw, (min-width: 768px) 50vw, 100vw"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,7,7,0.02),rgba(7,7,7,0.72))]" />
-          <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-black/55 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#f4efe8]">
-            {detail}
-          </div>
-        </div>
-      </Link>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20 opacity-30 transition-opacity duration-300 group-hover:opacity-75" />
+        </Link>
 
-      <div className="space-y-4 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[#9b8b77]">
-              {product.collection || "Valtorn Essential"}
-            </p>
-            <h3 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-[#111111]">
-              {product.name}
-            </h3>
-          </div>
-          <p className="text-sm font-semibold text-[#111111]">
-            {formatCurrency(product.price)}
-          </p>
+        {/* Badge in top-left */}
+        <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/12 bg-black/55 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#f4efe8] backdrop-blur-md">
+          {detail}
         </div>
 
-        <p className="text-sm leading-7 text-[#5f5a53]">{product.shortDescription}</p>
-
-        <div className="flex items-center justify-between gap-3 border-t border-black/8 pt-4">
-          <Link
-            href={`/products/${product.slug}`}
-            className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#7b6b58] transition hover:text-black"
-          >
-            View Piece
-            <ArrowUpRight className="h-4 w-4" />
-          </Link>
+        {/* Glassmorphic Quick Add Button centered inside image container */}
+        <div className="absolute inset-x-4 bottom-4 z-10 flex justify-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-4 sm:scale-95 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:scale-100">
           <Button
             type="button"
-            size="sm"
             onClick={handleQuickAdd}
-            className="bg-black text-white hover:bg-[#2b2b2b]"
+            className="h-11 w-full max-w-[92%] rounded-full border border-white/25 bg-white/90 text-black shadow-lg backdrop-blur-md text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 hover:bg-white hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
           >
             <ShoppingBag className="mr-2 h-4 w-4" />
-            Quick Add
+            Quick Add To Cart
           </Button>
         </div>
+      </div>
+
+      {/* Info Section below Image */}
+      <div className="space-y-2.5 p-3.5 sm:p-4.5">
+        <div>
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.28em] text-[#9b8b77]">
+            {product.collection || "Valtorn Essential"}
+          </p>
+          <div className="mt-1 flex items-start justify-between gap-3">
+            <Link href={`/products/${product.slug}`} className="block min-w-0 flex-1">
+              <h3 className="truncate text-base sm:text-lg font-semibold tracking-tight text-[#111111] hover:text-[#7b6b58] transition">
+                {product.name}
+              </h3>
+            </Link>
+            <div className="shrink-0 text-right">
+              <p className="text-base sm:text-lg font-bold tracking-tight text-[#111111]">
+                {formatCurrency(product.price)}
+              </p>
+              {product.compareAtPrice ? (
+                <p className="text-[11px] text-zinc-400 line-through">
+                  {formatCurrency(product.compareAtPrice)}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        {product.shortDescription ? (
+          <p className="text-xs leading-relaxed text-[#5f5a53] line-clamp-2">{product.shortDescription}</p>
+        ) : null}
       </div>
     </motion.article>
   );
@@ -298,26 +288,7 @@ export function ValtornHome({
           </div>
         </section>
 
-        {/* Feature Blocks */}
-        <section className="grid gap-4 sm:grid-cols-3">
-          {featureBlocks.map((block) => {
-            const Icon = block.icon;
-            return (
-              <div
-                key={block.title}
-                className="rounded-[1.8rem] border border-black/8 bg-[#faf7f3] p-6 text-[#111111]"
-              >
-                <Icon className="h-6 w-6 text-[#9b8b77]" />
-                <h3 className="mt-4 text-lg font-semibold tracking-[-0.03em]">
-                  {block.title}
-                </h3>
-                <p className="mt-2 text-sm leading-7 text-[#5f5a53]">
-                  {block.description}
-                </p>
-              </div>
-            );
-          })}
-        </section>
+
 
         {/* Dynamic Launch Products Section */}
         {showcasedProducts.length > 0 && (

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ category?: string; sort?: string }>;
+  searchParams?: Promise<{ category?: string; sort?: string; q?: string; query?: string }>;
 }) {
   const [products, dbCategories] = await Promise.all([
     getProducts(),
@@ -21,6 +21,7 @@ export default async function ProductsPage({
   const params = searchParams ? await searchParams : undefined;
   const defaultCategory = params?.category;
   const defaultSortParam = params?.sort;
+  const defaultQueryParam = params?.q ?? params?.query;
 
   return (
     <CollectionPage
@@ -28,6 +29,7 @@ export default async function ProductsPage({
       categories={dbCategories}
       defaultCategory={defaultCategory}
       defaultSortParam={defaultSortParam}
+      defaultQueryParam={defaultQueryParam}
     />
   );
 }

@@ -2,15 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Heart,
-  Search,
   ShoppingBag,
   SlidersHorizontal,
-  Sparkles,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { startTransition, useDeferredValue, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import type { Product } from "@/types";
@@ -19,7 +19,6 @@ import { useCartStore } from "@/store/cart-store";
 import { useWishlistStore } from "@/store/wishlist-store";
 import { AnimatedSection } from "@/components/shared/animated-section";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   buildStorefrontDisplayMeta,
   type CollectionFilter,
@@ -79,7 +78,9 @@ function CollectionProductCard({
   const toggleItem = useWishlistStore((state) => state.toggleItem);
   const isWishlisted = useWishlistStore((state) => state.ids.includes(entry.product.id));
 
-  const handleQuickAdd = () => {
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (entry.product.stock < 1) {
       toast.info("This piece is currently unavailable.");
       return;
@@ -99,87 +100,96 @@ function CollectionProductCard({
     <motion.article
       whileHover={{ y: -6 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="group overflow-hidden rounded-[2rem] border border-white/8 bg-[#101010] shadow-[0_40px_120px_-80px_rgba(0,0,0,1)]"
+      className="group relative overflow-hidden rounded-[2rem] border border-white/8 bg-[#101010] shadow-[0_40px_120px_-80px_rgba(0,0,0,1)] flex flex-col justify-between"
     >
-      <Link href={`/products/${entry.product.slug}`} className="block">
-        <div className="relative aspect-[4/5] overflow-hidden bg-[#171717]">
+      <div className="relative aspect-[4/5] overflow-hidden bg-[#171717]">
+        <Link href={`/products/${entry.product.slug}`} className="block h-full w-full">
           <Image
             src={entry.meta.images[0]}
             alt={entry.product.name}
             fill
-            className="object-cover transition duration-700 group-hover:scale-[1.03]"
+            className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
             sizes="(min-width: 1280px) 24vw, (min-width: 768px) 40vw, 100vw"
           />
-          <Image
-            src={entry.meta.images[1]}
-            alt={`${entry.product.name} detail`}
-            fill
-            className="object-cover opacity-0 transition duration-700 group-hover:opacity-100"
-            sizes="(min-width: 1280px) 24vw, (min-width: 768px) 40vw, 100vw"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,7,7,0.02),rgba(7,7,7,0.76))]" />
+          {entry.meta.images[1] ? (
+            <Image
+              src={entry.meta.images[1]}
+              alt={`${entry.product.name} detail`}
+              fill
+              className="object-cover opacity-0 transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100"
+              sizes="(min-width: 1280px) 24vw, (min-width: 768px) 40vw, 100vw"
+            />
+          ) : null}
+          {/* Subtle dark gradient overlay on hover for high contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/20 opacity-40 transition-opacity duration-300 group-hover:opacity-75" />
+        </Link>
 
-          <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#f5efe7]">
-            {entry.meta.badge}
-          </div>
-
-          <button
-            type="button"
-            aria-label={`Toggle wishlist for ${entry.product.name}`}
-            onClick={(event) => {
-              event.preventDefault();
-              toggleItem(entry.product.id);
-            }}
-            className={`absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 backdrop-blur transition ${
-              isWishlisted
-                ? "bg-[#f5efe7] text-black"
-                : "bg-black/35 text-white hover:bg-[#f5efe7] hover:text-black"
-            }`}
-          >
-            <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
-          </button>
-
-          <div className="absolute inset-x-5 bottom-5">
-            <p className="text-[10px] uppercase tracking-[0.28em] text-[#ccb79d]">
-              {entry.meta.mood}
-            </p>
-            <p className="mt-2 text-sm leading-6 text-[#f5efe7]">{entry.meta.accent}</p>
-          </div>
-        </div>
-      </Link>
-
-      <div className="space-y-4 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[#a59d90]">
-              {entry.meta.categoryLabel}
-            </p>
-            <h3 className="mt-2 text-xl font-semibold tracking-[-0.04em] text-[#f5efe7]">
-              {entry.product.name}
-            </h3>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-semibold text-[#f5efe7]">
-              {formatCurrency(entry.product.price)}
-            </p>
-            {entry.product.compareAtPrice ? (
-              <p className="mt-1 text-xs text-[#827b70] line-through">
-                {formatCurrency(entry.product.compareAtPrice)}
-              </p>
-            ) : null}
-          </div>
+        {/* Category / Badge overlay in top-left */}
+        <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/12 bg-black/50 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#f5efe7] backdrop-blur-md">
+          {entry.meta.badge || entry.meta.categoryLabel}
         </div>
 
-        <p className="text-sm leading-7 text-[#9f988b]">{entry.product.shortDescription}</p>
-
-        <Button
+        {/* Wishlist Heart Icon Button in top-right */}
+        <button
           type="button"
-          onClick={handleQuickAdd}
-          className="h-12 w-full bg-[#f5efe7] text-black hover:bg-[#d8c7b0]"
+          aria-label={`Toggle wishlist for ${entry.product.name}`}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleItem(entry.product.id);
+          }}
+          className={`absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/12 backdrop-blur-md transition-all duration-300 ${
+            isWishlisted
+              ? "bg-[#f5efe7] text-black shadow-lg"
+              : "bg-black/40 text-white hover:bg-[#f5efe7] hover:text-black"
+          }`}
         >
-          <ShoppingBag className="mr-2 h-4 w-4" />
-          Quick Add To Cart
-        </Button>
+          <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
+        </button>
+
+        {/* Centered Glassmorphic Quick Add Button inside Image container */}
+        <div className="absolute inset-x-4 bottom-4 z-10 flex justify-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-4 sm:scale-95 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:scale-100">
+          <Button
+            type="button"
+            onClick={handleQuickAdd}
+            className="h-11 w-full max-w-[92%] rounded-full border border-white/25 bg-white/90 text-black shadow-lg shadow-black/30 backdrop-blur-md text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 hover:bg-white hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <ShoppingBag className="mr-2 h-4 w-4" />
+            Quick Add To Cart
+          </Button>
+        </div>
+      </div>
+
+      {/* Info Section below Image */}
+      <div className="space-y-2.5 p-3.5 sm:p-4.5">
+        <div>
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ccb79d]">
+            {entry.meta.categoryLabel}
+          </p>
+          <div className="mt-1 flex items-start justify-between gap-3">
+            <Link href={`/products/${entry.product.slug}`} className="block min-w-0 flex-1">
+              <h3 className="truncate text-base sm:text-lg font-semibold tracking-tight text-[#f5efe7] transition-colors duration-200 group-hover:text-[#ccb79d]">
+                {entry.product.name}
+              </h3>
+            </Link>
+            <div className="shrink-0 text-right">
+              <p className="text-base sm:text-lg font-bold tracking-tight text-[#f5efe7]">
+                {formatCurrency(entry.product.price)}
+              </p>
+              {entry.product.compareAtPrice ? (
+                <p className="text-[11px] text-[#827b70] line-through">
+                  {formatCurrency(entry.product.compareAtPrice)}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        {entry.product.shortDescription ? (
+          <p className="text-xs leading-relaxed text-[#9f988b] line-clamp-2">
+            {entry.product.shortDescription}
+          </p>
+        ) : null}
       </div>
     </motion.article>
   );
@@ -224,15 +234,25 @@ export function CollectionPage({
   categories,
   defaultCategory,
   defaultSortParam,
+  defaultQueryParam,
   products,
 }: {
   categories?: { id: string; name: string; slug: string }[];
   defaultCategory?: string;
   defaultSortParam?: string;
+  defaultQueryParam?: string;
   products: Product[];
 }) {
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const urlQuery = searchParams?.get("q") || searchParams?.get("query") || defaultQueryParam || "";
+  const [query, setQuery] = useState(urlQuery);
+
+  useEffect(() => {
+    setQuery(urlQuery);
+  }, [urlQuery]);
+
   const [sort, setSort] = useState<SortOption>(resolveDefaultSort(defaultSortParam));
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>(
     resolveDefaultFilter(defaultCategory, defaultSortParam),
@@ -320,135 +340,16 @@ export function CollectionPage({
       }}
     >
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-10 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-        <AnimatedSection>
-          <section className="relative overflow-hidden rounded-[2.8rem] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(205,183,158,0.12),transparent_24%),linear-gradient(180deg,#121212_0%,#060606_100%)] p-6 shadow-[0_50px_150px_-70px_rgba(0,0,0,1)] sm:p-8 lg:p-12">
-            <Image
-              src="https://images.pexels.com/photos/4862951/pexels-photo-4862951.jpeg?cs=srgb&dl=pexels-karolina-grabowska-4862951.jpg&fm=jpg"
-              alt="Dark luxury fabric texture"
-              fill
-              priority
-              className="object-cover opacity-38"
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(5,5,5,0.92),rgba(5,5,5,0.58)),radial-gradient(circle_at_right,rgba(205,183,158,0.12),transparent_28%)]" />
-            <div className="relative grid gap-8 xl:grid-cols-[0.92fr_1.08fr] xl:items-end">
-              <div className="max-w-2xl space-y-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.38em] text-[#ccb79d]">
-                  VALTORN COLLECTION
-                </p>
-                <h1 className="text-3xl font-semibold tracking-[-0.08em] text-[#f7f2eb] sm:text-5xl md:text-6xl lg:text-[5.1rem]">
-                  Minimal Streetwear Essentials.
-                </h1>
-                <p className="max-w-xl text-base leading-8 text-[#b6afa4] sm:text-lg">
-                  Oversized silhouettes, premium fabrics, and modern menswear designed
-                  for everyday confidence.
-                </p>
-                <Button
-                  asChild
-                  size="lg"
-                  className="bg-[#f5efe7] text-black hover:bg-[#d8c7b0]"
-                >
-                  <Link href="#collection-grid">SHOP NOW</Link>
-                </Button>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative overflow-hidden rounded-[2rem] border border-white/8 bg-[#111] md:min-h-[320px]"
-                >
-                  <Image
-                    src="https://images.pexels.com/photos/35625406/pexels-photo-35625406.jpeg?cs=srgb&dl=pexels-joint-x-2158831780-35625406.jpg&fm=jpg"
-                    alt="Oversized black t-shirts on rack"
-                    fill
-                    priority
-                    className="object-cover"
-                    sizes="(min-width: 1280px) 32vw, 100vw"
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,6,6,0.04),rgba(6,6,6,0.8))]" />
-                  <div className="absolute inset-x-5 bottom-5">
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-[#ccb79d]">
-                      Oversized Focus
-                    </p>
-                    <p className="mt-2 text-lg font-semibold tracking-[-0.04em] text-[#f5efe7]">
-                      Product-first imagery with quiet studio light.
-                    </p>
-                  </div>
-                </motion.div>
-
-                <div className="grid gap-4">
-                  <motion.div
-                    whileHover={{ y: -4 }}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    className="relative overflow-hidden rounded-[2rem] border border-white/8 bg-[#111] min-h-[152px]"
-                  >
-                    <Image
-                      src="https://images.pexels.com/photos/20094389/pexels-photo-20094389.jpeg?cs=srgb&dl=pexels-thomas-richard-945930195-20094389.jpg&fm=jpg"
-                      alt="Premium pants on hanger"
-                      fill
-                      className="object-cover"
-                      sizes="(min-width: 1280px) 20vw, 100vw"
-                    />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,6,6,0.08),rgba(6,6,6,0.8))]" />
-                    <div className="absolute inset-x-4 bottom-4">
-                      <p className="text-[11px] uppercase tracking-[0.28em] text-[#ccb79d]">
-                        Premium Pants
-                      </p>
-                    </div>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ y: -4 }}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    className="rounded-[2rem] border border-white/8 bg-white/[0.04] p-5"
-                  >
-                    <Sparkles className="h-5 w-5 text-[#ccb79d]" />
-                    <p className="mt-5 text-[11px] uppercase tracking-[0.28em] text-[#ccb79d]">
-                      Curated Selection
-                    </p>
-                    <p className="mt-3 text-sm leading-7 text-[#a7a093]">
-                      Focused on oversized t-shirts, cargos, premium pants, and neutral essentials with minimal visual noise.
-                    </p>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </AnimatedSection>
 
         <AnimatedSection id="collection-grid" className="space-y-8">
-          <div className="sticky top-20 z-20 rounded-[2rem] border border-white/8 bg-[#0d0d0d]/92 p-4 shadow-[0_30px_110px_-70px_rgba(0,0,0,1)] backdrop-blur-xl">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-[#ccb79d]">
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.28em] text-[#9f988b]">
-                      Collection Filters
-                    </p>
-                    <p className="mt-1 text-sm text-[#f5efe7]">
-                      Refined selection for a quieter luxury shopping flow.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen((value) => !value)}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-white/10 px-4 text-xs font-semibold uppercase tracking-[0.22em] text-[#f5efe7] transition hover:bg-white/[0.06] lg:hidden"
-                >
-                  Filters
-                </button>
-              </div>
-
-              <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
-                <div className="flex min-w-max gap-2 sm:gap-3">
+          <div className="sticky top-20 z-20 rounded-[1.6rem] border border-white/8 bg-[#0d0d0d]/92 p-2.5 sm:p-3.5 shadow-[0_30px_110px_-70px_rgba(0,0,0,1)] backdrop-blur-xl">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="-mx-2.5 overflow-x-auto px-2.5 sm:mx-0 sm:px-0">
+                <div className="flex min-w-max items-center gap-2 sm:gap-2.5">
                   <button
                     type="button"
                     onClick={() => startTransition(() => setActiveFilter("all"))}
-                    className={`rounded-full px-4 py-3 sm:px-5 text-xs font-semibold uppercase tracking-[0.24em] transition ${
+                    className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
                       activeFilter === "all"
                         ? "bg-[#f5efe7] text-black"
                         : "border border-white/10 bg-white/[0.04] text-[#b0a99d] hover:bg-white/[0.08] hover:text-[#f5efe7]"
@@ -461,7 +362,7 @@ export function CollectionPage({
                       key={filter.value}
                       type="button"
                       onClick={() => startTransition(() => setActiveFilter(filter.value))}
-                      className={`rounded-full px-4 py-3 sm:px-5 text-xs font-semibold uppercase tracking-[0.24em] transition ${
+                      className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
                         activeFilter === filter.value
                           ? "bg-[#f5efe7] text-black"
                           : "border border-white/10 bg-white/[0.04] text-[#b0a99d] hover:bg-white/[0.08] hover:text-[#f5efe7]"
@@ -473,26 +374,16 @@ export function CollectionPage({
                 </div>
               </div>
 
-              <div className={`${filtersOpen ? "grid" : "hidden"} gap-4 lg:grid lg:grid-cols-[1.2fr_0.8fr]`}>
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#837b70]" />
-                  <Input
-                    value={query}
-                    onChange={(event) => startTransition(() => setQuery(event.target.value))}
-                    placeholder="Search oversized tees, cargos, and essentials"
-                    className="h-[52px] rounded-[1.5rem] border-white/10 bg-white/[0.04] pl-11 text-[#f5efe7] placeholder:text-[#837b70]"
-                  />
-                </div>
-
+              <div className="flex items-center justify-end gap-2.5 shrink-0">
                 <select
                   value={sort}
                   onChange={(event) =>
                     startTransition(() => setSort(event.target.value as SortOption))
                   }
-                  className="h-[52px] rounded-[1.5rem] border border-white/10 bg-white/[0.04] px-4 text-sm text-[#f5efe7] outline-none"
+                  className="h-9 rounded-full border border-white/10 bg-white/[0.04] px-4 text-xs font-semibold uppercase tracking-[0.16em] text-[#f5efe7] outline-none transition hover:bg-white/[0.08] cursor-pointer"
                 >
                   {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="bg-[#101010]">
+                    <option key={option.value} value={option.value} className="bg-[#101010] text-[#f5efe7]">
                       {option.label}
                     </option>
                   ))}
@@ -500,6 +391,24 @@ export function CollectionPage({
               </div>
             </div>
           </div>
+
+          {query ? (
+            <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-[#0d0d0d] px-4 py-3 text-xs text-[#f5efe7]">
+              <span>
+                Showing results for &quot;<strong className="text-[#ccb79d]">{query}</strong>&quot;
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  router.push("/products");
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1 text-[11px] font-medium text-[#b0a99d] transition hover:bg-white/10 hover:text-white"
+              >
+                <X className="h-3 w-3" /> Clear search
+              </button>
+            </div>
+          ) : null}
 
           <div className="flex items-center justify-between gap-4">
             <div>

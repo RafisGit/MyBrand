@@ -244,7 +244,10 @@ function ProductEditorDialog({
           variants: formState.variants.map((variant) => ({
             color: variant.color,
             size: variant.size,
-            sku: variant.sku,
+            sku:
+              variant.sku && variant.sku.length >= 3
+                ? variant.sku
+                : `VAL-${(formState.name || "ITEM").replace(/[^a-zA-Z0-9]/g, "").substring(0, 3).toUpperCase()}-${variant.color}-${variant.size}`,
             stock: Number(variant.stock),
           })),
         };
@@ -261,7 +264,25 @@ function ProductEditorDialog({
         setOpen(false);
         router.refresh();
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Unable to save product.");
+        let msg = "Unable to save product.";
+        if (error instanceof Error) {
+          try {
+            const parsed = JSON.parse(error.message);
+            if (Array.isArray(parsed) && parsed[0]?.message) {
+              msg = parsed
+                .map(
+                  (item: { path?: Array<string | number>; message: string }) =>
+                    `${item.path?.join(".") || "Field"}: ${item.message}`,
+                )
+                .join(" | ");
+            } else {
+              msg = error.message;
+            }
+          } catch {
+            msg = error.message;
+          }
+        }
+        toast.error(msg);
       }
     });
   };
@@ -386,19 +407,7 @@ function ProductEditorDialog({
                 </select>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[#f5efe7]">Description</Label>
-              <Textarea
-                value={formState.description}
-                onChange={(event) =>
-                  setFormState((current) => ({
-                    ...current,
-                    description: event.target.value,
-                  }))
-                }
-                className="border-white/10 bg-white/[0.04] text-white"
-              />
-            </div>
+
             <label className="flex items-center gap-3 text-sm text-[#d3ccbf]">
               <input
                 type="checkbox"
@@ -912,7 +921,7 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
                         <Badge className="bg-[#d8c0a1] text-black">Featured</Badge>
                       ) : null}
                     </div>
-                    <p className="text-sm leading-7 text-[#a69f94]">{product.description}</p>
+
                     <div className="flex flex-wrap gap-5 text-sm text-[#d7d0c5]">
                       <span>{formatCurrency(product.price)}</span>
                       <span>{product.stock} units</span>

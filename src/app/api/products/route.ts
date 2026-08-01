@@ -33,7 +33,15 @@ export async function GET(request: Request) {
     });
 
     if (!hasSupabasePublicEnv) {
-      const products = await getProducts();
+      let products = await getProducts();
+      if (params.query) {
+        const q = params.query.toLowerCase().trim();
+        products = products.filter((p) =>
+          `${p.name} ${p.category} ${p.shortDescription} ${p.description}`
+            .toLowerCase()
+            .includes(q),
+        );
+      }
       const page = params.page;
       const pageSize = params.pageSize;
       const startIndex = (page - 1) * pageSize;

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { navigationLinks } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { CartSheet } from "@/components/layout/cart-sheet";
+import { GlobalSearch } from "@/components/layout/global-search";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { UserAuthButton } from "@/components/layout/user-auth-button";
 
@@ -34,10 +35,10 @@ export function SiteHeader() {
     >
       <div
         className={cn(
-          "mx-auto flex w-full max-w-[1400px] items-center justify-between transition-all duration-300",
+          "mx-auto flex w-full max-w-[1400px] items-center justify-between transition-all duration-300 gap-3 sm:gap-4",
           isScrolled
-            ? "rounded-full border border-black/10 bg-white/88 px-5 py-3 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.35)] backdrop-blur-xl lg:px-7"
-            : "border-transparent bg-transparent px-4 py-4 lg:px-8 lg:py-6",
+            ? "rounded-full border border-black/10 bg-white/88 px-4 py-2.5 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.35)] backdrop-blur-xl lg:px-7"
+            : "border-transparent bg-transparent px-4 py-3 lg:px-8 lg:py-5",
         )}
       >
         <div className="flex items-center gap-3">
@@ -52,7 +53,7 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        <nav className="hidden items-center gap-8 lg:flex">
+        <nav className="hidden items-center gap-6 xl:gap-8 lg:flex">
           {navigationLinks.map((item) => (
             <Link
               key={item.href}
@@ -65,6 +66,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <GlobalSearch />
           <UserAuthButton />
           <CartSheet />
         </div>
