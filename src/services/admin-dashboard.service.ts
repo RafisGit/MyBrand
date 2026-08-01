@@ -3,6 +3,7 @@ import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { requireAdminUser } from "@/lib/auth";
 import { listAdminCollections, listAdminProducts } from "@/services/admin.service";
+import { getAllHomepageSectionsForAdmin } from "@/services/cms.service";
 import type { CatalogProduct } from "@/types/backend";
 import type {
   AdminActivityItem,
@@ -394,6 +395,8 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     totalProducts: products.length,
   };
 
+  const homepageSections = await getAllHomepageSectionsForAdmin();
+
   return {
     activityFeed: buildActivityFeed({
       customers,
@@ -404,6 +407,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     collections,
     customerSummary,
     customers,
+    homepageSections,
     orderSummary,
     orders,
     productPerformance,

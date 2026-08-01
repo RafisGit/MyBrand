@@ -1,4 +1,5 @@
 import type { CatalogProduct, OrderStatus, ProductStatus } from "@/types/backend";
+import type { HomepageSection } from "@/types/cms";
 
 export interface AdminRevenueSummary {
   dailyRevenue: number;
@@ -94,6 +95,7 @@ export interface AdminDashboardData {
   collections: AdminCollectionRecord[];
   customerSummary: AdminCustomerSummary;
   customers: AdminCustomerRecord[];
+  homepageSections: HomepageSection[];
   orderSummary: AdminOrdersSummary;
   orders: AdminOrderRecord[];
   productPerformance: AdminProductPerformancePoint[];

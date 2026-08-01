@@ -53,7 +53,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { ImageUploadZone } from "./image-upload-zone";
 import { HomepageEditor } from "./homepage-editor";
-import { MediaLibraryManager } from "./media-library-manager";
 
 
 type ProductFormState = {
@@ -728,12 +727,11 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
           <TabsTrigger value="collections">Collections</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
           <TabsTrigger value="customers">Customers</TabsTrigger>
-          <TabsTrigger value="media">Media Library</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="homepage" className="space-y-6">
-          <HomepageEditor sections={[]} />
+          <HomepageEditor sections={data.homepageSections || []} />
         </TabsContent>
 
         <TabsContent value="overview" className="space-y-6">
@@ -1238,10 +1236,6 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
               </SectionCard>
             ))}
           </div>
-        </TabsContent>
-
-        <TabsContent value="media" className="space-y-6">
-          <MediaLibraryManager initialAssets={[]} />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">

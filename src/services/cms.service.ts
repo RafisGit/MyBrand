@@ -86,23 +86,27 @@ export async function updateHomepageSection(sectionKey: string, payload: Partial
   const supabase = await createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("homepage_sections")
-    .update({
-      title: payload.title,
-      subtitle: payload.subtitle,
-      description: payload.description,
-      button_text: payload.buttonText,
-      button_link: payload.buttonLink,
-      images: payload.images as Json,
-      config: payload.config as Json,
-      visibility: payload.visibility,
-      status: payload.status,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("section_key", sectionKey)
+    .upsert(
+      {
+        section_key: sectionKey,
+        title: payload.title ?? "",
+        subtitle: payload.subtitle ?? null,
+        description: payload.description ?? null,
+        button_text: payload.buttonText ?? null,
+        button_link: payload.buttonLink ?? null,
+        images: (payload.images ?? {}) as Json,
+        config: (payload.config ?? {}) as Json,
+        visibility: payload.visibility ?? true,
+        status: payload.status ?? "published",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "section_key" }
+    )
     .select("*")
-    .maybeSingle();
+    .single();
 
   if (error) {
+    console.error("Error upserting homepage section:", error);
     throw error;
   }
 

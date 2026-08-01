@@ -1,14 +1,173 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import React, { useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
-import { Eye, EyeOff, Save, Loader2, Sparkles, ImagePlus } from "lucide-react";
+import { Eye, EyeOff, Save, Loader2, Sparkles, ImagePlus, UploadCloud, Trash2 } from "lucide-react";
 import type { HomepageSection } from "@/types/cms";
 import { updateHomepageSectionAction } from "@/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+
+interface HeroImageSlotProps {
+  label: string;
+  url: string;
+  onUrlChange: (newUrl: string) => void;
+  folderName: string;
+}
+
+function HeroImageSlot({ label, url, onUrlChange, folderName }: HeroImageSlotProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file (PNG, JPG, WEBP).");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("bucket", "banners");
+      formData.append("folder", folderName);
+      formData.append("file", file);
+
+      const response = await fetch("/api/admin/uploads", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await response.json();
+      if (!response.ok || !json.data?.publicUrl) {
+        throw new Error(json.error || "Failed to upload image.");
+      }
+
+      onUrlChange(json.data.publicUrl);
+      toast.success(`${label} uploaded successfully!`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Image upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleUpload(file);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleUpload(file);
+    }
+  };
+
+  return (
+    <div className="space-y-2 rounded-2xl border border-white/8 bg-white/[0.02] p-3.5">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-semibold text-[#d8c0a1] uppercase tracking-wider">{label}</Label>
+        <div className="flex items-center gap-2">
+          {url ? (
+            <button
+              type="button"
+              onClick={() => onUrlChange("")}
+              className="text-[11px] text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1"
+            >
+              <Trash2 className="h-3 w-3" /> Clear
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="text-[11px] font-bold uppercase tracking-wider text-amber-400 hover:text-amber-300 hover:underline disabled:opacity-50"
+          >
+            Select File
+          </button>
+        </div>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
+      {/* Drag & Drop Zone */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={cn(
+          "group relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-3 text-center cursor-pointer transition-all duration-200 min-h-[110px]",
+          isDragging
+            ? "border-amber-400 bg-amber-400/10 scale-[1.01]"
+            : "border-white/15 bg-black/30 hover:border-white/30 hover:bg-black/40"
+        )}
+      >
+        {isUploading ? (
+          <div className="flex flex-col items-center gap-2 py-3 text-amber-400">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="text-xs font-semibold">Uploading to Storage...</span>
+          </div>
+        ) : url ? (
+          <div className="relative w-full aspect-[16/7] overflow-hidden rounded-lg border border-white/10 group-hover:border-white/30">
+            <Image src={url} alt={label} fill className="object-cover" unoptimized />
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <UploadCloud className="h-5 w-5 text-amber-400" />
+              <span className="text-xs font-bold text-white uppercase tracking-wider">
+                Drop new file or Click to replace
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-1.5 py-3 text-[#a79f92]">
+            <UploadCloud className="h-6 w-6 text-amber-400/80 group-hover:scale-110 transition-transform" />
+            <p className="text-xs font-medium text-white">
+              Drag & drop image here, or <span className="text-amber-400 underline">browse</span>
+            </p>
+            <p className="text-[10px] text-[#8d867a]">Supports PNG, JPG, WEBP</p>
+          </div>
+        )}
+      </div>
+
+      {/* Direct URL text box */}
+      <Input
+        value={url}
+        onChange={(e) => onUrlChange(e.target.value)}
+        placeholder="Or paste direct image URL (https://...)"
+        className="border-white/10 bg-white/[0.04] text-xs text-white placeholder:text-white/30"
+      />
+    </div>
+  );
+}
 
 export function HomepageEditor({ sections }: { sections: HomepageSection[] }) {
   const [isPending, startTransition] = useTransition();
@@ -61,22 +220,22 @@ export function HomepageEditor({ sections }: { sections: HomepageSection[] }) {
           status: "published",
         });
         toast.success("Homepage Hero Section published successfully!");
-      } catch {
-        toast.error("Failed to save homepage section.");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to save homepage section.");
       }
     });
   };
 
   return (
     <div className="space-y-6 rounded-3xl border border-white/10 bg-[#111111] p-6 text-[#f5efe7]">
-      <div className="flex items-center justify-between border-b border-white/10 pb-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-amber-400" />
             Homepage Hero Section Editor
           </h2>
           <p className="text-xs text-[#a79f92] mt-1">
-            Edit text, CTAs, and background/feature image URLs. Everything updates live on the storefront.
+            Edit text, CTAs, and upload hero images via Drag & Drop or direct URLs. Updates live on storefront.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -85,12 +244,16 @@ export function HomepageEditor({ sections }: { sections: HomepageSection[] }) {
             variant="outline"
             size="sm"
             onClick={() => setFormState((prev) => ({ ...prev, visibility: !prev.visibility }))}
-            className="border-white/10 text-white"
+            className="border-white/15 bg-white/5 text-[#f5efe7] hover:bg-white/10 hover:text-white"
           >
             {formState.visibility ? <Eye className="mr-2 h-4 w-4 text-emerald-400" /> : <EyeOff className="mr-2 h-4 w-4 text-rose-400" />}
             {formState.visibility ? "Visible" : "Hidden"}
           </Button>
-          <Button onClick={handleSave} disabled={isPending} className="bg-amber-500 text-black hover:bg-amber-400 font-semibold">
+          <Button
+            onClick={handleSave}
+            disabled={isPending}
+            className="bg-amber-500 text-black hover:bg-amber-400 font-bold px-6 cursor-pointer disabled:opacity-50"
+          >
             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             Save & Publish
           </Button>
@@ -151,44 +314,36 @@ export function HomepageEditor({ sections }: { sections: HomepageSection[] }) {
         <div className="space-y-4 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
           <h3 className="text-sm font-semibold text-white uppercase tracking-wider flex items-center gap-2">
             <ImagePlus className="h-4 w-4 text-amber-400" />
-            Hero Section Image Assets (Storage / CDN URLs)
+            Hero Section Image Assets (Drag & Drop or File Select)
           </h3>
 
-          <div className="space-y-2">
-            <Label className="text-xs text-[#a79f92]">Primary Hero Image URL</Label>
-            <Input
-              value={formState.primaryImage}
-              onChange={(e) => setFormState({ ...formState, primaryImage: e.target.value })}
-              className="border-white/10 bg-white/[0.04] text-xs text-white"
-            />
-          </div>
+          <HeroImageSlot
+            label="Primary Hero Image"
+            url={formState.primaryImage}
+            onUrlChange={(url) => setFormState((prev) => ({ ...prev, primaryImage: url }))}
+            folderName="hero"
+          />
 
-          <div className="space-y-2">
-            <Label className="text-xs text-[#a79f92]">Fabric Close-up Image URL</Label>
-            <Input
-              value={formState.fabricImage}
-              onChange={(e) => setFormState({ ...formState, fabricImage: e.target.value })}
-              className="border-white/10 bg-white/[0.04] text-xs text-white"
-            />
-          </div>
+          <HeroImageSlot
+            label="Fabric Close-up Image"
+            url={formState.fabricImage}
+            onUrlChange={(url) => setFormState((prev) => ({ ...prev, fabricImage: url }))}
+            folderName="hero"
+          />
 
-          <div className="space-y-2">
-            <Label className="text-xs text-[#a79f92]">Apparel / Trousers Card Image URL</Label>
-            <Input
-              value={formState.trousersImage}
-              onChange={(e) => setFormState({ ...formState, trousersImage: e.target.value })}
-              className="border-white/10 bg-white/[0.04] text-xs text-white"
-            />
-          </div>
+          <HeroImageSlot
+            label="Apparel / Trousers Card Image"
+            url={formState.trousersImage}
+            onUrlChange={(url) => setFormState((prev) => ({ ...prev, trousersImage: url }))}
+            folderName="hero"
+          />
 
-          <div className="space-y-2">
-            <Label className="text-xs text-[#a79f92]">Studio Editorial Image URL</Label>
-            <Input
-              value={formState.editorialImage}
-              onChange={(e) => setFormState({ ...formState, editorialImage: e.target.value })}
-              className="border-white/10 bg-white/[0.04] text-xs text-white"
-            />
-          </div>
+          <HeroImageSlot
+            label="Studio Editorial Image"
+            url={formState.editorialImage}
+            onUrlChange={(url) => setFormState((prev) => ({ ...prev, editorialImage: url }))}
+            folderName="hero"
+          />
         </div>
       </div>
     </div>
