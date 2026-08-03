@@ -319,6 +319,7 @@ DECLARE
   v_best_seller BOOLEAN;
   v_recommended BOOLEAN;
   v_limited_edition BOOLEAN;
+  v_on_sale BOOLEAN;
   v_status public.product_status;
   v_total_stock INT := 0;
 BEGIN

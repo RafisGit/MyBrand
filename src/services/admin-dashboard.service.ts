@@ -3,6 +3,7 @@ import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { requireAdminUser } from "@/lib/auth";
 import { listAdminCollections, listAdminProducts } from "@/services/admin.service";
+import { createPaginationMeta } from "@/lib/utils/api";
 import { getAllHomepageSectionsForAdmin } from "@/services/cms.service";
 import type { CatalogProduct } from "@/types/backend";
 import type {
@@ -266,7 +267,10 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
 
   const [productsResult, ordersResult, usersResult, collectionsResult, orderItemsResult] =
     await Promise.all([
-      listAdminProducts(1, 50),
+      listAdminProducts(1, 50).then(
+        (result) => result,
+        (err) => { console.warn("Admin dashboard products query warning:", err?.message ?? err); return { data: [] as CatalogProduct[], meta: createPaginationMeta(1, 50, 0) }; },
+      ),
       adminClient
         .from("orders")
         .select(
@@ -279,7 +283,10 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         .select("id, full_name, email, phone, role, created_at")
         .order("created_at", { ascending: false })
         .limit(50),
-      listAdminCollections(),
+      listAdminCollections().then(
+        (result) => result,
+        (err) => { console.warn("Admin dashboard collections query warning:", err?.message ?? err); return [] as Awaited<ReturnType<typeof listAdminCollections>>; },
+      ),
       adminClient
         .from("order_items")
         .select(

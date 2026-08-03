@@ -420,11 +420,8 @@ export async function createProduct(input: ProductInputType) {
   });
 
   if (error) {
-    if (error.code === "PGRST202" || error.message?.includes("Could not find the function") || error.message?.includes("schema cache")) {
-      return await createProductFallback(adminClient, input);
-    }
-    console.error("Transactional RPC create error:", error);
-    throw new AppError(error.message || "Failed to create product atomically", 500);
+    console.warn("Transactional RPC create error (falling back to multi-step insert):", error.message ?? error);
+    return await createProductFallback(adminClient, input);
   }
 
   revalidateCommercePaths();
@@ -464,12 +461,9 @@ export async function updateProduct(productId: string, input: ProductInputType) 
   });
 
   if (error) {
-    if (error.code === "PGRST202" || error.message?.includes("Could not find the function") || error.message?.includes("schema cache")) {
-      await updateProductFallback(adminClient, productId, input);
-      return;
-    }
-    console.error("Transactional RPC update error:", error);
-    throw new AppError(error.message || "Failed to update product atomically", 500);
+    console.warn("Transactional RPC update error (falling back to multi-step update):", error.message ?? error);
+    await updateProductFallback(adminClient, productId, input);
+    return;
   }
 
   revalidateCommercePaths();
