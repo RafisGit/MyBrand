@@ -104,7 +104,7 @@ export async function requireAuthenticatedUserOrRedirect(nextPath = CUSTOMER_HOM
 export async function requireAdminUserOrRedirect(nextPath = "/admin") {
   const context = await requireAuthenticatedUserOrRedirect(nextPath);
 
-  if (context.profile.role !== "admin") {
+  if (context.profile?.role !== "admin") {
     redirect(CUSTOMER_HOME_PATH);
   }
 

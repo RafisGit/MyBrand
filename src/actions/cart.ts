@@ -11,10 +11,7 @@ import {
 import { cartItemSchema, cartQuantitySchema, guestCartMergeSchema } from "@/lib/validations/cart";
 import { assertActionOrigin } from "@/lib/utils/security";
 
-function revalidateCartSurfaces() {
-  revalidatePath("/checkout");
-  revalidatePath("/dashboard");
-}
+import { revalidateCartSurfaces } from "@/lib/server/action-helpers";
 
 export async function addCartItemAction(input: {
   productVariantId: string;

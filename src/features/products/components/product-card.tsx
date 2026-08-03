@@ -72,14 +72,42 @@ export function ProductCard({
         </Link>
 
         {/* Top Badges */}
-        <div className="absolute left-4 top-4 z-10 flex gap-2">
-          {product.category ? (
-            <Badge variant="secondary" className="uppercase tracking-[0.2em] text-[10px] backdrop-blur-md bg-black/60 text-white border-0">
-              {product.category}
-            </Badge>
-          ) : null}
-          {product.bestSeller ? <Badge>Best Seller</Badge> : null}
-          {product.featured ? <Badge variant="secondary">Featured</Badge> : null}
+        <div className="absolute left-4 top-4 z-10 flex flex-wrap gap-1.5 max-w-[70%]">
+          {(() => {
+            const badges: Array<{ label: string; className: string }> = [];
+
+            const isOnSale = Boolean(product.onSale || (product.compareAtPrice && product.compareAtPrice > product.price));
+            if (isOnSale) {
+              badges.push({ label: "SALE", className: "bg-rose-600/90 text-white border-rose-500/30 font-bold" });
+            }
+            if (product.bestSeller) {
+              badges.push({ label: "BEST SELLER", className: "bg-amber-500/90 text-black font-bold border-amber-400/40" });
+            }
+            if (product.newArrival) {
+              badges.push({ label: "NEW", className: "bg-emerald-600/90 text-white border-emerald-500/30" });
+            }
+            if (product.limitedEdition) {
+              badges.push({ label: "LIMITED", className: "bg-purple-600/90 text-white border-purple-500/30" });
+            }
+            if (product.trending) {
+              badges.push({ label: "TRENDING", className: "bg-orange-600/90 text-white border-orange-500/30" });
+            }
+            if (product.featured) {
+              badges.push({ label: "FEATURED", className: "bg-indigo-600/90 text-white border-indigo-500/30" });
+            }
+            if (product.recommended) {
+              badges.push({ label: "RECOMMENDED", className: "bg-sky-600/90 text-white border-sky-500/30" });
+            }
+
+            return badges.slice(0, 2).map((badge) => (
+              <Badge
+                key={badge.label}
+                className={`uppercase tracking-[0.18em] text-[9px] px-2 py-0.5 backdrop-blur-md shadow-sm border ${badge.className}`}
+              >
+                {badge.label}
+              </Badge>
+            ));
+          })()}
         </div>
 
         {/* Top-right Actions */}

@@ -97,8 +97,8 @@ export const products: Product[] = [
     story:
       "Every seam is tuned for proportion, giving the silhouette weight and shape instead of slouch.",
     price: 85,
-    category: "Oversized",
-    collection: "Core Uniform",
+    category: "VALTORN Oversized T-Shirt",
+    collection: "VALTORN Oversized T-Shirts",
     images: [
       "https://images.unsplash.com/photo-1523398002811-999ca8dec234?auto=format&fit=crop&w=1400&q=80",
       "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=80",

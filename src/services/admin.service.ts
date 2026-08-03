@@ -6,10 +6,11 @@ import { requireAdminUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { toSlug } from "@/lib/utils/slug";
 import { AppError } from "@/lib/utils/errors";
+import type { Database } from "@/lib/supabase/database.types";
 import type { DbCategory, PaginatedResult } from "@/types/backend";
 import type { CatalogProduct } from "@/types/backend";
 import { createPaginationMeta } from "@/lib/utils/api";
-import { mapProductRecord } from "@/lib/supabase/mappers";
+import { mapProductRecord, type ProductRecordWithRelations } from "@/lib/supabase/mappers";
 import type { MediaAsset } from "@/types/cms";
 
 function validateProductImages(images: { displayOrder: number; imageUrl: string }[]) {
@@ -22,6 +23,31 @@ function validateProductImages(images: { displayOrder: number; imageUrl: string 
 }
 
 const ADMIN_PRODUCT_SELECT = `
+  id,
+  name,
+  slug,
+  description,
+  price,
+  discount_price,
+  stock,
+  gender,
+  featured,
+  trending,
+  new_arrival,
+  best_seller,
+  recommended,
+  limited_edition,
+  on_sale,
+  status,
+  created_at,
+  updated_at,
+  categories ( id, name, slug ),
+  product_images ( image_url, display_order ),
+  product_variants ( id, size, color, stock, sku ),
+  reviews ( rating )
+`;
+
+const LEGACY_ADMIN_PRODUCT_SELECT = `
   id,
   name,
   slug,
@@ -90,19 +116,35 @@ export async function listAdminProducts(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  let rawRecords: ProductRecordWithRelations[] = [];
+  let totalCount = 0;
+
   const { data, error, count } = await supabase
     .from("products")
     .select(ADMIN_PRODUCT_SELECT, { count: "exact" })
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (error) {
+  if (error && (error.code === "42703" || error.message?.includes("column"))) {
+    const fallback = await supabase
+      .from("products")
+      .select(LEGACY_ADMIN_PRODUCT_SELECT, { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (fallback.error) throw fallback.error;
+    rawRecords = (fallback.data ?? []) as unknown as ProductRecordWithRelations[];
+    totalCount = fallback.count ?? 0;
+  } else if (error) {
     throw error;
+  } else {
+    rawRecords = (data ?? []) as unknown as ProductRecordWithRelations[];
+    totalCount = count ?? 0;
   }
 
   return {
-    data: (data ?? []).map((record) => mapProductRecord(record as unknown as AdminProductRecord)),
-    meta: createPaginationMeta(page, pageSize, count ?? 0),
+    data: rawRecords.map((record) => mapProductRecord(record)),
+    meta: createPaginationMeta(page, pageSize, totalCount),
   };
 }
 
@@ -171,7 +213,13 @@ type ProductInputType = {
   collectionId?: string | null;
   description: string;
   discountPrice?: number | null;
-  featured: boolean;
+  featured?: boolean;
+  trending?: boolean;
+  newArrival?: boolean;
+  bestSeller?: boolean;
+  recommended?: boolean;
+  limitedEdition?: boolean;
+  onSale?: boolean;
   gender: "men" | "women" | "unisex";
   images: { displayOrder: number; imageUrl: string; altText?: string | null; storagePath?: string | null; fileSize?: number | null; imageType?: string | null }[];
   name: string;
@@ -186,7 +234,7 @@ type AdminClient = Awaited<ReturnType<typeof createAuthorizedAdminClient>>;
 async function createProductFallback(adminClient: AdminClient, input: ProductInputType) {
   const targetCategory = input.categoryId ?? input.collectionId ?? null;
 
-  const { data: product, error: productError } = await adminClient
+  let { data: product, error: productError } = await adminClient
     .from("products")
     .insert({
       name: input.name,
@@ -197,11 +245,39 @@ async function createProductFallback(adminClient: AdminClient, input: ProductInp
       category_id: targetCategory,
       collection_id: targetCategory,
       gender: input.gender,
-      featured: input.featured,
+      featured: input.featured ?? false,
+      trending: input.trending ?? false,
+      new_arrival: input.newArrival ?? true,
+      best_seller: input.bestSeller ?? false,
+      recommended: input.recommended ?? false,
+      limited_edition: input.limitedEdition ?? false,
+      on_sale: input.onSale ?? false,
       status: input.status,
     })
     .select("id")
     .maybeSingle();
+
+  if (productError && (productError.code === "42703" || productError.message?.includes("column"))) {
+    const legacyRes = await adminClient
+      .from("products")
+      .insert({
+        name: input.name,
+        slug: input.slug ? toSlug(input.slug) : toSlug(input.name),
+        description: input.description,
+        price: input.price,
+        discount_price: input.discountPrice ?? null,
+        category_id: targetCategory,
+        collection_id: targetCategory,
+        gender: input.gender,
+        featured: input.featured ?? false,
+        status: input.status,
+      })
+      .select("id")
+      .maybeSingle();
+
+    product = legacyRes.data;
+    productError = legacyRes.error;
+  }
 
   if (productError || !product) {
     throw new AppError(productError?.message || "Could not create product", 500);
@@ -238,7 +314,7 @@ async function createProductFallback(adminClient: AdminClient, input: ProductInp
 async function updateProductFallback(adminClient: AdminClient, productId: string, input: ProductInputType) {
   const targetCategory = input.categoryId ?? input.collectionId ?? null;
 
-  const { error: productError } = await adminClient
+  let { error: productError } = await adminClient
     .from("products")
     .update({
       name: input.name,
@@ -249,10 +325,36 @@ async function updateProductFallback(adminClient: AdminClient, productId: string
       category_id: targetCategory,
       collection_id: targetCategory,
       gender: input.gender,
-      featured: input.featured,
+      featured: input.featured ?? false,
+      trending: input.trending ?? false,
+      new_arrival: input.newArrival ?? true,
+      best_seller: input.bestSeller ?? false,
+      recommended: input.recommended ?? false,
+      limited_edition: input.limitedEdition ?? false,
+      on_sale: input.onSale ?? false,
       status: input.status,
     })
     .eq("id", productId);
+
+  if (productError && (productError.code === "42703" || productError.message?.includes("column"))) {
+    const legacyRes = await adminClient
+      .from("products")
+      .update({
+        name: input.name,
+        slug: input.slug ? toSlug(input.slug) : toSlug(input.name),
+        description: input.description,
+        price: input.price,
+        discount_price: input.discountPrice ?? null,
+        category_id: targetCategory,
+        collection_id: targetCategory,
+        gender: input.gender,
+        featured: input.featured ?? false,
+        status: input.status,
+      })
+      .eq("id", productId);
+
+    productError = legacyRes.error;
+  }
 
   if (productError) {
     throw productError;
@@ -301,7 +403,13 @@ export async function createProduct(input: ProductInputType) {
     categoryId: targetCategory,
     collectionId: targetCategory,
     gender: input.gender,
-    featured: input.featured,
+    featured: input.featured ?? false,
+    trending: input.trending ?? false,
+    newArrival: input.newArrival ?? true,
+    bestSeller: input.bestSeller ?? false,
+    recommended: input.recommended ?? false,
+    limitedEdition: input.limitedEdition ?? false,
+    onSale: input.onSale ?? false,
     status: input.status,
     images: input.images,
     variants: input.variants,
@@ -339,7 +447,13 @@ export async function updateProduct(productId: string, input: ProductInputType) 
     categoryId: targetCategory,
     collectionId: targetCategory,
     gender: input.gender,
-    featured: input.featured,
+    featured: input.featured ?? false,
+    trending: input.trending ?? false,
+    newArrival: input.newArrival ?? true,
+    bestSeller: input.bestSeller ?? false,
+    recommended: input.recommended ?? false,
+    limitedEdition: input.limitedEdition ?? false,
+    onSale: input.onSale ?? false,
     status: input.status,
     images: input.images,
     variants: input.variants,
@@ -360,6 +474,44 @@ export async function updateProduct(productId: string, input: ProductInputType) 
 
   revalidateCommercePaths();
   return data;
+}
+
+export async function bulkUpdateProductLabels(
+  productIds: string[],
+  updates: {
+    featured?: boolean;
+    newArrival?: boolean;
+    bestSeller?: boolean;
+    trending?: boolean;
+    limitedEdition?: boolean;
+    recommended?: boolean;
+    onSale?: boolean;
+  },
+) {
+  if (!productIds.length) return;
+  const adminClient = await createAuthorizedAdminClient();
+
+  const payload: Database["public"]["Tables"]["products"]["Update"] = {};
+  if (updates.featured !== undefined) payload.featured = updates.featured;
+  if (updates.newArrival !== undefined) payload.new_arrival = updates.newArrival;
+  if (updates.bestSeller !== undefined) payload.best_seller = updates.bestSeller;
+  if (updates.trending !== undefined) payload.trending = updates.trending;
+  if (updates.limitedEdition !== undefined) payload.limited_edition = updates.limitedEdition;
+  if (updates.recommended !== undefined) payload.recommended = updates.recommended;
+  if (updates.onSale !== undefined) payload.on_sale = updates.onSale;
+
+  if (!Object.keys(payload).length) return;
+
+  const { error } = await adminClient
+    .from("products")
+    .update(payload)
+    .in("id", productIds);
+
+  if (error) {
+    throw error;
+  }
+
+  revalidateCommercePaths();
 }
 
 export async function deleteProduct(productId: string) {

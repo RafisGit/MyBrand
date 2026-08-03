@@ -156,7 +156,8 @@ function buildRevenueSeries(orders: AdminOrderRecord[]): AdminRevenuePoint[] {
 function buildProductPerformance(rows: ProductOrderRow[]): AdminProductPerformancePoint[] {
   const aggregate = new Map<string, AdminProductPerformancePoint>();
 
-  for (const row of rows) {
+  for (const row of rows ?? []) {
+    if (!row) continue;
     const variantRecord = Array.isArray(row.product_variants)
       ? row.product_variants[0]
       : row.product_variants;
@@ -164,26 +165,32 @@ function buildProductPerformance(rows: ProductOrderRow[]): AdminProductPerforman
       ? variantRecord?.products[0]
       : variantRecord?.products;
 
-    if (!variantRecord || !productRecord) {
+    if (!variantRecord || !productRecord || !productRecord.id) {
       continue;
     }
 
-    const existing = aggregate.get(productRecord.id);
-    const revenue = Number(row.price) * row.quantity;
+    const productId = productRecord.id;
+    const productName = productRecord.name ?? "Item";
+    const productStatus = productRecord.status ?? "active";
+    const productStock = Number(productRecord.stock ?? 0);
+    const quantity = Number(row.quantity ?? 0);
+    const revenue = Number(row.price ?? 0) * quantity;
+
+    const existing = aggregate.get(productId);
 
     if (existing) {
-      existing.unitsSold += row.quantity;
+      existing.unitsSold += quantity;
       existing.revenue += revenue;
       continue;
     }
 
-    aggregate.set(productRecord.id, {
-      id: productRecord.id,
-      name: productRecord.name,
+    aggregate.set(productId, {
+      id: productId,
+      name: productName,
       revenue,
-      status: productRecord.status,
-      stock: productRecord.stock,
-      unitsSold: row.quantity,
+      status: productStatus,
+      stock: productStock,
+      unitsSold: quantity,
     });
   }
 
@@ -280,22 +287,14 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         ),
     ]);
 
-  if (ordersResult.error) {
-    throw ordersResult.error;
-  }
+  if (ordersResult.error) console.warn("Admin dashboard orders query warning:", ordersResult.error.message);
+  if (usersResult.error) console.warn("Admin dashboard users query warning:", usersResult.error.message);
+  if (orderItemsResult.error) console.warn("Admin dashboard order items query warning:", orderItemsResult.error.message);
 
-  if (usersResult.error) {
-    throw usersResult.error;
-  }
-
-  if (orderItemsResult.error) {
-    throw orderItemsResult.error;
-  }
-
-  const products = productsResult.data;
+  const products = productsResult.data ?? [];
   const orders = (ordersResult.data ?? []).map((order) => mapOrderRow(order as OrderRow));
   const customersSource = (usersResult.data ?? []) as UserRow[];
-  const collections = collectionsResult;
+  const collections = collectionsResult ?? [];
   const productPerformance = buildProductPerformance(
     (orderItemsResult.data ?? []) as ProductOrderRow[],
   );

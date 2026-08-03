@@ -165,6 +165,28 @@ export async function searchProducts(
   });
 
   if (error) {
+    if (error.code === "42703" || error.code === "PGRST202" || error.message?.includes("column")) {
+      const catalog = await getCatalogProducts();
+      let filtered = catalog;
+      if (params.query) {
+        const q = params.query.toLowerCase().trim();
+        filtered = filtered.filter((p) =>
+          `${p.name} ${p.category.name} ${p.description}`.toLowerCase().includes(q),
+        );
+      }
+      if (params.category) {
+        const cat = params.category.toLowerCase().trim();
+        filtered = filtered.filter((p) =>
+          (p.category.slug || p.category.name || "").toLowerCase() === cat,
+        );
+      }
+      const startIndex = (page - 1) * pageSize;
+      const paginated = filtered.slice(startIndex, startIndex + pageSize);
+      return {
+        data: paginated,
+        meta: createPaginationMeta(page, pageSize, filtered.length),
+      };
+    }
     throw error;
   }
 
@@ -182,6 +204,12 @@ export async function searchProducts(
       stock: Number(row.total_stock),
       gender: row.gender,
       featured: row.featured,
+      trending: Boolean(row.trending),
+      newArrival: Boolean(row.new_arrival),
+      bestSeller: Boolean(row.best_seller),
+      recommended: Boolean(row.recommended),
+      limitedEdition: Boolean(row.limited_edition),
+      onSale: Boolean(row.on_sale),
       status: row.status,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -202,14 +230,39 @@ export async function searchProducts(
   };
 }
 
-export async function getFeaturedProducts() {
+export async function getFeaturedProducts(limit = 4) {
   const allProducts = await getProducts();
-  return allProducts.filter((product) => product.featured).slice(0, 4);
+  return allProducts.filter((product) => product.featured).slice(0, limit);
 }
 
-export async function getBestSellerProducts() {
+export async function getBestSellerProducts(limit = 4) {
   const allProducts = await getProducts();
-  return allProducts.filter((product) => product.bestSeller).slice(0, 4);
+  return allProducts.filter((product) => product.bestSeller).slice(0, limit);
+}
+
+export async function getNewArrivalProducts(limit = 8) {
+  const allProducts = await getProducts();
+  return allProducts.filter((product) => product.newArrival).slice(0, limit);
+}
+
+export async function getTrendingProducts(limit = 8) {
+  const allProducts = await getProducts();
+  return allProducts.filter((product) => product.trending).slice(0, limit);
+}
+
+export async function getLimitedEditionProducts(limit = 8) {
+  const allProducts = await getProducts();
+  return allProducts.filter((product) => product.limitedEdition).slice(0, limit);
+}
+
+export async function getRecommendedProducts(limit = 8) {
+  const allProducts = await getProducts();
+  return allProducts.filter((product) => product.recommended).slice(0, limit);
+}
+
+export async function getSaleProducts(limit = 8) {
+  const allProducts = await getProducts();
+  return allProducts.filter((product) => product.onSale).slice(0, limit);
 }
 
 export async function getProductBySlug(slug: string) {

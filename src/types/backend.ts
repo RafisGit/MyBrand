@@ -49,6 +49,12 @@ export interface ProductSearchParams {
   query?: string;
   category?: string;
   featured?: boolean;
+  bestSeller?: boolean;
+  newArrival?: boolean;
+  trending?: boolean;
+  limitedEdition?: boolean;
+  recommended?: boolean;
+  onSale?: boolean;
   gender?: ProductGender;
   minPrice?: number;
   maxPrice?: number;
@@ -77,6 +83,12 @@ export interface CatalogProduct {
   stock: number;
   gender: ProductGender | null;
   featured: boolean;
+  trending: boolean;
+  newArrival: boolean;
+  bestSeller: boolean;
+  recommended: boolean;
+  limitedEdition: boolean;
+  onSale: boolean;
   status: ProductStatus;
   createdAt: string;
   updatedAt: string;

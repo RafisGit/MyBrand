@@ -1,14 +1,4 @@
-export type ProductCategory =
-  | "Men"
-  | "Women"
-  | "Menswear"
-  | "Womenswear"
-  | "Oversized"
-  | "Hoodies"
-  | "Streetwear"
-  | "Thobes"
-  | "Panjabi"
-  | "Sherwani";
+export type ProductCategory = string;
 
 export type PaymentMethod = "stripe" | "sslcommerz";
 
@@ -40,7 +30,12 @@ export interface Product {
   colors: string[];
   stock: number;
   featured: boolean;
-  bestSeller: boolean;
+  bestSeller?: boolean;
+  newArrival?: boolean;
+  trending?: boolean;
+  limitedEdition?: boolean;
+  recommended?: boolean;
+  onSale?: boolean;
   rating: number;
   materials: string[];
   seoDescription: string;

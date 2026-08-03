@@ -12,6 +12,12 @@ export type ProductRecordWithRelations = {
   gender: "men" | "women" | "unisex" | null;
   id: string;
   name: string;
+  trending?: boolean;
+  new_arrival?: boolean;
+  best_seller?: boolean;
+  recommended?: boolean;
+  limited_edition?: boolean;
+  on_sale?: boolean;
   price: number;
   product_images: {
     display_order: number;
@@ -81,7 +87,13 @@ export function mapProductRecord(record: ProductRecordWithRelations): CatalogPro
     discountPrice: record.discount_price === null ? null : Number(record.discount_price),
     stock: record.stock,
     gender: record.gender,
-    featured: record.featured,
+    featured: Boolean(record.featured),
+    trending: Boolean(record.trending),
+    newArrival: Boolean(record.new_arrival ?? true),
+    bestSeller: Boolean(record.best_seller),
+    recommended: Boolean(record.recommended),
+    limitedEdition: Boolean(record.limited_edition),
+    onSale: Boolean(record.on_sale || (record.discount_price !== null && Number(record.discount_price) < Number(record.price))),
     status: record.status,
     createdAt: record.created_at,
     updatedAt: record.updated_at,
@@ -134,9 +146,12 @@ export function mapCatalogProductToStorefront(product: CatalogProduct): Product 
     colors: product.availableColors,
     stock: product.stock,
     featured: product.featured,
-    bestSeller:
-      seedMatch?.bestSeller ??
-      Boolean(product.featured && (product.averageRating ?? 0) >= 4.5),
+    bestSeller: product.bestSeller || seedMatch?.bestSeller || false,
+    newArrival: product.newArrival,
+    trending: product.trending,
+    limitedEdition: product.limitedEdition,
+    recommended: product.recommended,
+    onSale: product.onSale,
     rating: product.averageRating ?? seedMatch?.rating ?? 4.8,
     materials: seedMatch?.materials ?? ["Premium fabrication"],
     seoDescription: seedMatch?.seoDescription ?? product.description,

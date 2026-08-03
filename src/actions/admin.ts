@@ -1,9 +1,9 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
-
+import { handleActionError, revalidateAdmin } from "@/lib/server/action-helpers";
 import {
   archiveProduct,
+  bulkUpdateProductLabels,
   createCategory,
   createProduct,
   deleteCategory,
@@ -21,23 +21,19 @@ import { categorySchema, productMutationSchema } from "@/lib/validations/product
 import { orderStatusSchema } from "@/lib/validations/orders";
 import { assertActionOrigin } from "@/lib/utils/security";
 
-function revalidateAdmin() {
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/products");
-  revalidateTag("homepage");
-  revalidateTag("categories");
-}
-
 export async function createCategoryAction(input: {
   name: string;
   slug?: string;
 }) {
-  await assertActionOrigin();
-  const payload = categorySchema.parse(input);
-  const category = await createCategory(payload);
-  revalidateAdmin();
-  return category;
+  try {
+    await assertActionOrigin();
+    const payload = categorySchema.parse(input);
+    const category = await createCategory(payload);
+    revalidateAdmin();
+    return category;
+  } catch (error) {
+    handleActionError(error, "Failed to create collection.");
+  }
 }
 
 export async function updateCategoryAction(
@@ -58,70 +54,94 @@ export async function deleteCategoryAction(categoryId: string) {
 }
 
 export async function createProductAction(input: unknown) {
-  await assertActionOrigin();
-  const payload = productMutationSchema.parse(input);
+  try {
+    await assertActionOrigin();
+    const payload = productMutationSchema.parse(input);
 
-  const product = await createProduct({
-    ...payload,
-    images: payload.images.map((image) => ({
-      displayOrder: image.displayOrder,
-      imageUrl: image.imageUrl,
-      altText: image.altText ?? null,
-      storagePath: image.storagePath ?? null,
-      fileSize: image.fileSize ?? null,
-    })),
-    variants: payload.variants,
-  });
+    const product = await createProduct({
+      ...payload,
+      images: payload.images.map((image) => ({
+        displayOrder: image.displayOrder,
+        imageUrl: image.imageUrl,
+        altText: image.altText ?? null,
+        storagePath: image.storagePath ?? null,
+        fileSize: image.fileSize ?? null,
+      })),
+      variants: payload.variants,
+    });
 
-  revalidateAdmin();
-  return product;
+    revalidateAdmin();
+    return product;
+  } catch (error) {
+    handleActionError(error, "Failed to create product.");
+  }
 }
 
 export async function updateProductAction(productId: string, input: unknown) {
-  await assertActionOrigin();
-  const payload = productMutationSchema.parse(input);
+  try {
+    await assertActionOrigin();
+    const payload = productMutationSchema.parse(input);
 
-  await updateProduct(productId, {
-    ...payload,
-    images: payload.images.map((image) => ({
-      displayOrder: image.displayOrder,
-      imageUrl: image.imageUrl,
-      altText: image.altText ?? null,
-      storagePath: image.storagePath ?? null,
-      fileSize: image.fileSize ?? null,
-    })),
-    variants: payload.variants,
-  });
+    await updateProduct(productId, {
+      ...payload,
+      images: payload.images.map((image) => ({
+        displayOrder: image.displayOrder,
+        imageUrl: image.imageUrl,
+        altText: image.altText ?? null,
+        storagePath: image.storagePath ?? null,
+        fileSize: image.fileSize ?? null,
+      })),
+      variants: payload.variants,
+    });
 
-  revalidateAdmin();
+    revalidateAdmin();
+  } catch (error) {
+    handleActionError(error, "Failed to update product.");
+  }
 }
 
 export async function deleteProductAction(productId: string) {
-  await assertActionOrigin();
-  await deleteProduct(productId);
-  revalidateAdmin();
+  try {
+    await assertActionOrigin();
+    await deleteProduct(productId);
+    revalidateAdmin();
+  } catch (error) {
+    handleActionError(error, "Failed to delete product.");
+  }
 }
 
 export async function duplicateProductAction(productId: string) {
-  await assertActionOrigin();
-  const product = await duplicateProduct(productId);
-  revalidateAdmin();
-  return product;
+  try {
+    await assertActionOrigin();
+    const product = await duplicateProduct(productId);
+    revalidateAdmin();
+    return product;
+  } catch (error) {
+    handleActionError(error, "Failed to duplicate product.");
+  }
 }
 
 export async function archiveProductAction(productId: string) {
-  await assertActionOrigin();
-  const product = await archiveProduct(productId);
-  revalidateAdmin();
-  return product;
+  try {
+    await assertActionOrigin();
+    const product = await archiveProduct(productId);
+    revalidateAdmin();
+    return product;
+  } catch (error) {
+    handleActionError(error, "Failed to archive product.");
+  }
 }
 
 export async function updateOrderStatusAction(orderId: string, input: unknown) {
-  await assertActionOrigin();
-  const payload = orderStatusSchema.parse(input);
-  const order = await updateOrderStatus(orderId, payload);
-  revalidateAdmin();
-  return order;
+  try {
+    await assertActionOrigin();
+    const payload = orderStatusSchema.parse(input);
+    const order = await updateOrderStatus(orderId, payload);
+    revalidateAdmin();
+    return order;
+  } catch (error) {
+    handleActionError(error, "Failed to update order status.");
+  }
 }
 
 export async function uploadAdminAssetAction(input: {
@@ -129,22 +149,55 @@ export async function uploadAdminAssetAction(input: {
   file: File;
   folder?: string;
 }) {
-  await assertActionOrigin();
-  return uploadAdminAsset(input);
+  try {
+    await assertActionOrigin();
+    return uploadAdminAsset(input);
+  } catch (error) {
+    handleActionError(error, "Failed to upload asset.");
+  }
 }
 
 export async function updateHomepageSectionAction(
   sectionKey: string,
   payload: Partial<HomepageSection>
 ) {
-  await assertActionOrigin();
-  const updated = await updateHomepageSection(sectionKey, payload);
-  revalidateAdmin();
-  return updated;
+  try {
+    await assertActionOrigin();
+    const updated = await updateHomepageSection(sectionKey, payload);
+    revalidateAdmin();
+    return updated;
+  } catch (error) {
+    handleActionError(error, "Failed to update homepage section.");
+  }
 }
 
 export async function deleteMediaAssetAction(id: string, path: string, bucket = "products") {
-  await assertActionOrigin();
-  await deleteMediaAsset(id, path, bucket);
-  revalidateAdmin();
+  try {
+    await assertActionOrigin();
+    await deleteMediaAsset(id, path, bucket);
+    revalidateAdmin();
+  } catch (error) {
+    handleActionError(error, "Failed to delete media asset.");
+  }
+}
+
+export async function bulkUpdateProductLabelsAction(
+  productIds: string[],
+  updates: {
+    featured?: boolean;
+    newArrival?: boolean;
+    bestSeller?: boolean;
+    trending?: boolean;
+    limitedEdition?: boolean;
+    recommended?: boolean;
+    onSale?: boolean;
+  },
+) {
+  try {
+    await assertActionOrigin();
+    await bulkUpdateProductLabels(productIds, updates);
+    revalidateAdmin();
+  } catch (error) {
+    handleActionError(error, "Failed to execute bulk label update.");
+  }
 }

@@ -285,16 +285,18 @@ export function CollectionPage({
     }));
   }, [products]);
 
+
   const filteredProducts = useMemo(() => {
     const normalizedQuery = deferredQuery.toLowerCase().trim();
+    const activeSlug = toSlug(activeFilter);
 
     const visibleProducts = curatedProducts.filter((entry) => {
-      const activeSlug = toSlug(activeFilter);
       const matchesFilter =
         activeFilter === "all" ||
         entry.meta.filters.includes(activeFilter) ||
-        entry.meta.filters.includes(activeSlug) ||
-        entry.meta.filters.includes(activeFilter.toLowerCase());
+        entry.meta.filters.includes(activeSlug);
+
+
       const matchesQuery =
         !normalizedQuery ||
         `${entry.product.name} ${entry.meta.categoryLabel} ${entry.product.shortDescription}`

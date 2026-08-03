@@ -46,10 +46,18 @@ ALTER TABLE public.products ADD COLUMN IF NOT EXISTS new_arrival BOOLEAN NOT NUL
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS best_seller BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS recommended BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS limited_edition BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS on_sale BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ DEFAULT timezone('utc', now());
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES public.users(id) ON DELETE SET NULL;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES public.users(id) ON DELETE SET NULL;
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS idx_products_on_sale ON public.products (on_sale);
+CREATE INDEX IF NOT EXISTS idx_products_trending ON public.products (trending);
+CREATE INDEX IF NOT EXISTS idx_products_new_arrival ON public.products (new_arrival);
+CREATE INDEX IF NOT EXISTS idx_products_best_seller ON public.products (best_seller);
+CREATE INDEX IF NOT EXISTS idx_products_recommended ON public.products (recommended);
+CREATE INDEX IF NOT EXISTS idx_products_limited_edition ON public.products (limited_edition);
 
 -- 5. Enhance Product Images Table
 ALTER TABLE public.product_images ADD COLUMN IF NOT EXISTS caption TEXT;
@@ -331,12 +339,13 @@ BEGIN
   END IF;
 
   v_gender := COALESCE((p_payload->>'gender')::public.product_gender, 'unisex'::public.product_gender);
-  v_featured := COALESCE((p_payload->>'featured')::BOOLEAN, false);
-  v_trending := COALESCE((p_payload->>'trending')::BOOLEAN, false);
-  v_new_arrival := COALESCE((p_payload->>'newArrival')::BOOLEAN, true);
-  v_best_seller := COALESCE((p_payload->>'bestSeller')::BOOLEAN, false);
-  v_recommended := COALESCE((p_payload->>'recommended')::BOOLEAN, false);
-  v_limited_edition := COALESCE((p_payload->>'limitedEdition')::BOOLEAN, false);
+  v_featured := COALESCE((p_payload->>'featured')::BOOLEAN, (p_payload->>'is_featured')::BOOLEAN, false);
+  v_trending := COALESCE((p_payload->>'trending')::BOOLEAN, (p_payload->>'is_trending')::BOOLEAN, false);
+  v_new_arrival := COALESCE((p_payload->>'newArrival')::BOOLEAN, (p_payload->>'is_new_arrival')::BOOLEAN, true);
+  v_best_seller := COALESCE((p_payload->>'bestSeller')::BOOLEAN, (p_payload->>'is_best_seller')::BOOLEAN, false);
+  v_recommended := COALESCE((p_payload->>'recommended')::BOOLEAN, (p_payload->>'is_recommended')::BOOLEAN, false);
+  v_limited_edition := COALESCE((p_payload->>'limitedEdition')::BOOLEAN, (p_payload->>'is_limited_edition')::BOOLEAN, false);
+  v_on_sale := COALESCE((p_payload->>'onSale')::BOOLEAN, (p_payload->>'is_on_sale')::BOOLEAN, false);
   v_status := COALESCE((p_payload->>'status')::public.product_status, 'active'::public.product_status);
 
   -- Calculate total stock from variants
@@ -361,6 +370,7 @@ BEGIN
       best_seller = v_best_seller,
       recommended = v_recommended,
       limited_edition = v_limited_edition,
+      on_sale = v_on_sale,
       status = v_status,
       updated_at = timezone('utc', now())
     WHERE id = v_product_id;
@@ -368,10 +378,10 @@ BEGIN
     -- Insert new product
     INSERT INTO public.products (
       id, name, slug, description, price, discount_price, stock, category_id, collection_id,
-      gender, featured, trending, new_arrival, best_seller, recommended, limited_edition, status
+      gender, featured, trending, new_arrival, best_seller, recommended, limited_edition, on_sale, status
     ) VALUES (
       COALESCE(v_product_id, gen_random_uuid()), v_name, v_slug, v_description, v_price, v_discount_price, v_total_stock,
-      v_category_id, v_collection_id, v_gender, v_featured, v_trending, v_new_arrival, v_best_seller, v_recommended, v_limited_edition, v_status
+      v_category_id, v_collection_id, v_gender, v_featured, v_trending, v_new_arrival, v_best_seller, v_recommended, v_limited_edition, v_on_sale, v_status
     )
     RETURNING id INTO v_product_id;
   END IF;

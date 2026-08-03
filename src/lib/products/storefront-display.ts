@@ -31,47 +31,41 @@ export function buildStorefrontDisplayMeta(
   product: Product,
   priority: number,
 ): ProductDisplayMeta {
-  const haystack = `${product.name} ${product.category} ${product.collection}`.toLowerCase();
   const filters: CollectionFilter[] = ["all"];
 
+  // Exact slug from category
   if (product.category) {
     filters.push(toSlug(product.category));
-    filters.push(product.category.toLowerCase());
-    filters.push(product.category);
   }
 
-  if (product.collection) {
+  // Exact slug from collection (may differ from category)
+  if (product.collection && product.collection !== product.category) {
     filters.push(toSlug(product.collection));
-    filters.push(product.collection.toLowerCase());
-    filters.push(product.collection);
   }
 
-  if (
-    haystack.includes("tee") ||
-    haystack.includes("t-shirt") ||
-    haystack.includes("shirt")
-  ) {
-    filters.push("t-shirts");
-  }
-
-  if (
-    haystack.includes("pant") ||
-    haystack.includes("trouser") ||
-    haystack.includes("cargo")
-  ) {
-    filters.push("pants");
-  }
-
-  if (haystack.includes("oversized")) {
-    filters.push("oversized-fits");
-  }
-
+  // Virtual label filters
   if (product.bestSeller || product.featured) {
     filters.push("best-sellers");
   }
 
-  if (isNewArrival(product)) {
+  if (product.newArrival || isNewArrival(product)) {
     filters.push("new-arrivals");
+  }
+
+  if (product.trending) {
+    filters.push("trending");
+  }
+
+  if (product.onSale) {
+    filters.push("on-sale");
+  }
+
+  if (product.limitedEdition) {
+    filters.push("limited-edition");
+  }
+
+  if (product.recommended) {
+    filters.push("recommended");
   }
 
   const primaryImage = product.images[0] ?? fallbackImage;
