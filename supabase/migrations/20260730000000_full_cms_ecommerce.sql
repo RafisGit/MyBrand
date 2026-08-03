@@ -321,8 +321,15 @@ BEGIN
   v_description := p_payload->>'description';
   v_price := (p_payload->>'price')::NUMERIC;
   v_discount_price := (p_payload->>'discountPrice')::NUMERIC;
-  v_category_id := (p_payload->>'categoryId')::UUID;
-  v_collection_id := (p_payload->>'collectionId')::UUID;
+  v_category_id := COALESCE((p_payload->>'categoryId')::UUID, (p_payload->>'collectionId')::UUID);
+  v_collection_id := COALESCE((p_payload->>'collectionId')::UUID, (p_payload->>'categoryId')::UUID);
+
+  IF v_category_id IS NOT NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM public.categories WHERE id = v_category_id) AND NOT EXISTS (SELECT 1 FROM public.collections WHERE id = v_category_id) THEN
+      RAISE EXCEPTION 'Collection does not exist.';
+    END IF;
+  END IF;
+
   v_gender := COALESCE((p_payload->>'gender')::public.product_gender, 'unisex'::public.product_gender);
   v_featured := COALESCE((p_payload->>'featured')::BOOLEAN, false);
   v_trending := COALESCE((p_payload->>'trending')::BOOLEAN, false);

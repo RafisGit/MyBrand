@@ -73,6 +73,7 @@ export const productMutationSchema = z.object({
   price: z.coerce.number().min(0),
   discountPrice: z.coerce.number().min(0).nullable().optional(),
   categoryId: uuidSchema.nullable().optional(),
+  collectionId: uuidSchema.nullable().optional(),
   gender: z.enum(["men", "women", "unisex"]).default("unisex"),
   featured: z.coerce.boolean().default(false),
   status: z.enum(["draft", "active", "archived"]).default("active"),

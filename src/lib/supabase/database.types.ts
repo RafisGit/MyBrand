@@ -225,6 +225,7 @@ export interface Database {
       products: {
         Row: {
           category_id: string | null;
+          collection_id: string | null;
           created_at: string;
           description: string;
           discount_price: number | null;
@@ -241,6 +242,7 @@ export interface Database {
         };
         Insert: {
           category_id?: string | null;
+          collection_id?: string | null;
           created_at?: string;
           description: string;
           discount_price?: number | null;
@@ -257,6 +259,7 @@ export interface Database {
         };
         Update: {
           category_id?: string | null;
+          collection_id?: string | null;
           created_at?: string;
           description?: string;
           discount_price?: number | null;

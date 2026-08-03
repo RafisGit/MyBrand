@@ -37,10 +37,13 @@ export function buildStorefrontDisplayMeta(
   if (product.category) {
     filters.push(toSlug(product.category));
     filters.push(product.category.toLowerCase());
+    filters.push(product.category);
   }
 
   if (product.collection) {
     filters.push(toSlug(product.collection));
+    filters.push(product.collection.toLowerCase());
+    filters.push(product.collection);
   }
 
   if (

@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import {
   Heart,
   ShoppingBag,
-  SlidersHorizontal,
   X,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -43,6 +42,8 @@ const sortOptions: { label: string; value: SortOption }[] = [
 ];
 
 
+import { toSlug } from "@/lib/utils/slug";
+
 function resolveDefaultFilter(category?: string, sort?: string): CollectionFilter {
   if (sort === "popular") {
     return "best-sellers";
@@ -55,7 +56,7 @@ function resolveDefaultFilter(category?: string, sort?: string): CollectionFilte
   if (category) {
     const catLower = category.toLowerCase();
     if (catLower === "oversized") return "oversized-fits";
-    return catLower;
+    return toSlug(category);
   }
 
   return "all";
@@ -288,8 +289,12 @@ export function CollectionPage({
     const normalizedQuery = deferredQuery.toLowerCase().trim();
 
     const visibleProducts = curatedProducts.filter((entry) => {
+      const activeSlug = toSlug(activeFilter);
       const matchesFilter =
-        activeFilter === "all" || entry.meta.filters.includes(activeFilter);
+        activeFilter === "all" ||
+        entry.meta.filters.includes(activeFilter) ||
+        entry.meta.filters.includes(activeSlug) ||
+        entry.meta.filters.includes(activeFilter.toLowerCase());
       const matchesQuery =
         !normalizedQuery ||
         `${entry.product.name} ${entry.meta.categoryLabel} ${entry.product.shortDescription}`

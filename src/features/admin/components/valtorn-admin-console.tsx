@@ -127,7 +127,7 @@ function SectionCard({
   return (
     <div
       className={cn(
-        "rounded-[1.9rem] border border-white/10 bg-white/[0.03] p-5 shadow-[0_24px_100px_-60px_rgba(0,0,0,0.85)] backdrop-blur",
+        "rounded-[1.9rem] border border-white/10 bg-[#121212] p-5 shadow-[0_24px_100px_-60px_rgba(0,0,0,0.85)] backdrop-blur",
         className,
       )}
     >
@@ -221,8 +221,10 @@ function ProductEditorDialog({
 
     startTransition(async () => {
       try {
+        const selectedCatId = formState.categoryId || null;
         const payload = {
-          categoryId: formState.categoryId || null,
+          categoryId: selectedCatId,
+          collectionId: selectedCatId,
           description: formState.description,
           discountPrice: formState.discountPrice
             ? Number(formState.discountPrice)
@@ -345,6 +347,15 @@ function ProductEditorDialog({
                     </option>
                   ))}
                 </select>
+                {formState.categoryId ? (
+                  <p className="mt-1 text-[11px] font-semibold text-emerald-400">
+                    ✓ Collection: {categories.find((c) => c.id === formState.categoryId)?.name || "Assigned"}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[11px] text-amber-400/80">
+                    ⚠ Unassigned collection
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="text-[#f5efe7]">Status</Label>
@@ -721,13 +732,13 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="h-auto flex-wrap gap-2 rounded-[1.8rem] border border-white/10 bg-[#121212] p-2">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="homepage">Homepage & Hero</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="collections">Collections</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="overview" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Overview</TabsTrigger>
+          <TabsTrigger value="homepage" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Homepage & Hero</TabsTrigger>
+          <TabsTrigger value="products" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Products</TabsTrigger>
+          <TabsTrigger value="collections" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Collections</TabsTrigger>
+          <TabsTrigger value="orders" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Orders</TabsTrigger>
+          <TabsTrigger value="customers" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Customers</TabsTrigger>
+          <TabsTrigger value="settings" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="homepage" className="space-y-6">
@@ -938,15 +949,15 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
                       <h3 className="text-2xl font-semibold tracking-tight text-[#f7f2eb]">
                         {product.name}
                       </h3>
-                      <Badge variant="secondary" className="bg-white/[0.06] text-[#f5efe7] ring-white/10">
+                      <Badge variant="secondary" className="bg-white/10 text-white ring-1 ring-white/15">
                         {product.status}
                       </Badge>
                       {product.featured ? (
-                        <Badge className="bg-[#d8c0a1] text-black">Featured</Badge>
+                        <Badge className="bg-[#d8c0a1] text-black font-bold">Featured</Badge>
                       ) : null}
                     </div>
 
-                    <div className="flex flex-wrap gap-5 text-sm text-[#d7d0c5]">
+                    <div className="flex flex-wrap gap-5 text-sm text-zinc-300 font-medium">
                       <span>{formatCurrency(product.price)}</span>
                       <span>{product.stock} units</span>
                       <span>{product.variants.length} variants</span>
@@ -958,6 +969,7 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
                     <ProductEditorDialog categories={data.collections} product={product} />
                     <Button
                       variant="secondary"
+                      className="bg-white text-black font-bold hover:bg-zinc-200"
                       onClick={() =>
                         void duplicateProductAction(product.id)
                           .then(() => {
@@ -978,6 +990,7 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
                     </Button>
                     <Button
                       variant="outline"
+                      className="border-white/20 bg-white/5 text-white hover:bg-white hover:text-black font-bold"
                       onClick={() =>
                         void archiveProductAction(product.id)
                           .then(() => {
@@ -998,6 +1011,7 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
                     </Button>
                     <Button
                       variant="outline"
+                      className="border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500 hover:text-white font-bold"
                       onClick={() => {
                         if (!window.confirm(`Delete ${product.name}?`)) {
                           return;
@@ -1050,12 +1064,12 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
                     <p className="text-xl font-semibold tracking-tight text-[#f7f2eb]">
                       {collection.name}
                     </p>
-                    <p className="mt-2 text-sm text-[#8d867a]">/{collection.slug}</p>
-                    <p className="mt-4 text-sm leading-7 text-[#a69f94]">
+                    <p className="mt-2 text-sm font-mono text-amber-200/80">/{collection.slug}</p>
+                    <p className="mt-4 text-sm leading-7 text-zinc-300 font-medium">
                       {collection.productCount} mapped product{collection.productCount === 1 ? "" : "s"}.
                     </p>
                   </div>
-                  <Badge variant="secondary" className="bg-white/[0.06] text-[#f5efe7] ring-white/10">
+                  <Badge variant="secondary" className="bg-white/10 text-white ring-1 ring-white/15 font-semibold">
                     {formatTimestamp(collection.createdAt)}
                   </Badge>
                 </div>
@@ -1064,6 +1078,7 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
                   <CollectionEditorDialog collection={collection} />
                   <Button
                     variant="outline"
+                    className="border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500 hover:text-white font-bold"
                     onClick={() => {
                       if (!window.confirm(`Delete ${collection.name}?`)) {
                         return;

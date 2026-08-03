@@ -126,8 +126,9 @@ export function mapCatalogProductToStorefront(product: CatalogProduct): Product 
     compareAtPrice: product.discountPrice ? product.price : seedMatch?.compareAtPrice,
     category: (product.category.name ?? "Streetwear") as Product["category"],
     collection:
+      product.category.name ??
       seedMatch?.collection ??
-      `${product.category.name ?? "Connected"} Collection`,
+      "Connected Collection",
     images: product.images.length ? product.images : seedMatch?.images ?? [],
     sizes: product.availableSizes,
     colors: product.availableColors,

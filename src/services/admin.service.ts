@@ -70,8 +70,11 @@ function revalidateCommercePaths() {
   revalidatePath("/products");
   revalidatePath("/admin");
   revalidatePath("/account");
+  revalidatePath("/checkout");
   revalidateTag("categories");
+  revalidateTag("collections");
   revalidateTag("homepage");
+  revalidateTag("products");
 }
 
 async function createAuthorizedAdminClient() {
@@ -181,6 +184,8 @@ type ProductInputType = {
 type AdminClient = Awaited<ReturnType<typeof createAuthorizedAdminClient>>;
 
 async function createProductFallback(adminClient: AdminClient, input: ProductInputType) {
+  const targetCategory = input.categoryId ?? input.collectionId ?? null;
+
   const { data: product, error: productError } = await adminClient
     .from("products")
     .insert({
@@ -189,7 +194,8 @@ async function createProductFallback(adminClient: AdminClient, input: ProductInp
       description: input.description,
       price: input.price,
       discount_price: input.discountPrice ?? null,
-      category_id: input.categoryId ?? null,
+      category_id: targetCategory,
+      collection_id: targetCategory,
       gender: input.gender,
       featured: input.featured,
       status: input.status,
@@ -230,6 +236,8 @@ async function createProductFallback(adminClient: AdminClient, input: ProductInp
 }
 
 async function updateProductFallback(adminClient: AdminClient, productId: string, input: ProductInputType) {
+  const targetCategory = input.categoryId ?? input.collectionId ?? null;
+
   const { error: productError } = await adminClient
     .from("products")
     .update({
@@ -238,7 +246,8 @@ async function updateProductFallback(adminClient: AdminClient, productId: string
       description: input.description,
       price: input.price,
       discount_price: input.discountPrice ?? null,
-      category_id: input.categoryId ?? null,
+      category_id: targetCategory,
+      collection_id: targetCategory,
       gender: input.gender,
       featured: input.featured,
       status: input.status,
@@ -281,6 +290,7 @@ export async function createProduct(input: ProductInputType) {
   validateProductImages(input.images);
 
   const adminClient = await createAuthorizedAdminClient();
+  const targetCategory = input.categoryId ?? input.collectionId ?? null;
 
   const payload = {
     name: input.name,
@@ -288,8 +298,8 @@ export async function createProduct(input: ProductInputType) {
     description: input.description,
     price: input.price,
     discountPrice: input.discountPrice ?? null,
-    categoryId: input.categoryId ?? null,
-    collectionId: input.collectionId ?? null,
+    categoryId: targetCategory,
+    collectionId: targetCategory,
     gender: input.gender,
     featured: input.featured,
     status: input.status,
@@ -317,6 +327,7 @@ export async function updateProduct(productId: string, input: ProductInputType) 
   validateProductImages(input.images);
 
   const adminClient = await createAuthorizedAdminClient();
+  const targetCategory = input.categoryId ?? input.collectionId ?? null;
 
   const payload = {
     id: productId,
@@ -325,8 +336,8 @@ export async function updateProduct(productId: string, input: ProductInputType) 
     description: input.description,
     price: input.price,
     discountPrice: input.discountPrice ?? null,
-    categoryId: input.categoryId ?? null,
-    collectionId: input.collectionId ?? null,
+    categoryId: targetCategory,
+    collectionId: targetCategory,
     gender: input.gender,
     featured: input.featured,
     status: input.status,
