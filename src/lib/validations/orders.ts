@@ -2,14 +2,20 @@ import { z } from "zod";
 
 export const checkoutAddressSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
-  email: z.string().email(),
+  email: z.string().email().or(z.literal("")),
   phone: z.string().trim().min(6).max(40),
-  addressLine1: z.string().trim().min(5).max(200),
-  addressLine2: z.string().trim().max(200).optional(),
+  addressLine1: z.string().trim().min(2).max(300),
+  addressLine2: z.string().trim().max(300).optional(),
   city: z.string().trim().min(2).max(80),
   region: z.string().trim().min(2).max(80),
   postalCode: z.string().trim().min(2).max(20),
   country: z.string().trim().min(2).max(80),
+  division: z.string().trim().optional(),
+  district: z.string().trim().optional(),
+  upazila: z.string().trim().optional(),
+  area: z.string().trim().optional(),
+  landmark: z.string().trim().optional(),
+  fullAddress: z.string().trim().optional(),
   notes: z.string().trim().max(500).optional(),
 });
 
@@ -29,7 +35,7 @@ export const checkoutPayloadSchema = z.object({
     )
     .min(1),
   shippingAddress: checkoutAddressSchema,
-  paymentMethod: z.enum(["stripe", "sslcommerz"]),
+  paymentMethod: z.enum(["cod", "bkash", "nagad", "rocket", "sslcommerz", "stripe"]),
   subtotal: z.coerce.number().min(0),
   shippingCost: z.coerce.number().min(0),
   discount: z.coerce.number().min(0),

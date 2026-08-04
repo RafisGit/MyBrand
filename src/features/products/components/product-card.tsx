@@ -158,7 +158,11 @@ export function ProductCard({
       <div className="space-y-2.5 p-3.5 sm:p-4.5">
         <div>
           <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.24em] text-zinc-500">
-            {product.collection || product.category || "Valtorn Essential"}
+            {product.collection ||
+              (typeof product.category === "object" && product.category !== null
+                ? (product.category as { name?: string }).name
+                : String(product.category || "")) ||
+              "Valtorn Essential"}
           </p>
           <div className="mt-1 flex items-start justify-between gap-3">
             <Link href={`/products/${product.slug}`} className="block min-w-0 flex-1">

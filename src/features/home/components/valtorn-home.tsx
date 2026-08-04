@@ -15,6 +15,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useCartStore } from "@/store/cart-store";
 import { AnimatedSection } from "@/components/shared/animated-section";
 import { Button } from "@/components/ui/button";
+import { LuxuryNewsletterSection } from "@/components/newsletter/luxury-newsletter-section";
 
 const defaultHeroAssets = {
   primary:
@@ -326,6 +327,11 @@ export function ValtornHome({
             </div>
           </AnimatedSection>
         )}
+
+        {/* Private Members Luxury Newsletter Subscription System */}
+        <div className="mt-8 rounded-[2.6rem] overflow-hidden">
+          <LuxuryNewsletterSection source="homepage" />
+        </div>
       </div>
     </div>
   );

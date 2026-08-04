@@ -12,7 +12,7 @@ const optionalString = z.preprocess(
 
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
-  NEXT_PUBLIC_CURRENCY: z.string().min(3).default("USD"),
+  NEXT_PUBLIC_CURRENCY: z.string().min(3).default("BDT"),
   NEXT_PUBLIC_SUPABASE_URL: optionalUrl,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: optionalString,
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: optionalString,

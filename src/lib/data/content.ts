@@ -84,7 +84,7 @@ export const socialGallery: SocialImage[] = [
 ];
 
 export const dashboardMetrics: DashboardMetric[] = [
-  { label: "Revenue", value: "$42.8K", change: "+18.4%" },
+  { label: "Revenue", value: "৳42.8K", change: "+18.4%" },
   { label: "Orders", value: "312", change: "+9.2%" },
-  { label: "AOV", value: "$137", change: "+5.1%" },
+  { label: "AOV", value: "৳1,850", change: "+5.1%" },
 ];

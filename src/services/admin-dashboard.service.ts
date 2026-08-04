@@ -6,6 +6,7 @@ import { listAdminCollections, listAdminProducts } from "@/services/admin.servic
 import { createPaginationMeta } from "@/lib/utils/api";
 import { getAllHomepageSectionsForAdmin } from "@/services/cms.service";
 import type { CatalogProduct } from "@/types/backend";
+import type { HomepageSection } from "@/types/cms";
 import type {
   AdminActivityItem,
   AdminCustomerRecord,
@@ -401,7 +402,10 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     totalProducts: products.length,
   };
 
-  const homepageSections = await getAllHomepageSectionsForAdmin();
+  const homepageSections = await getAllHomepageSectionsForAdmin().catch((err) => {
+    console.warn("Admin dashboard homepage sections query warning:", err?.message ?? err);
+    return [] as HomepageSection[];
+  });
 
   return {
     activityFeed: buildActivityFeed({

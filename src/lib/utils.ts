@@ -1,18 +1,15 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { publicEnv } from "@/lib/env";
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currency = publicEnv.currency) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
+export function formatCurrency(amount: number) {
+  const formatted = new Intl.NumberFormat("en-BD", {
     maximumFractionDigits: 0,
   }).format(amount);
+  return `৳${formatted}`;
 }
 
 export function formatCompactNumber(value: number) {

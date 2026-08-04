@@ -5,7 +5,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAdminUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { toSlug } from "@/lib/utils/slug";
-import { AppError } from "@/lib/utils/errors";
+import { AppError, toAppError } from "@/lib/utils/errors";
 import type { Database } from "@/lib/supabase/database.types";
 import type { DbCategory, PaginatedResult } from "@/types/backend";
 import type { CatalogProduct } from "@/types/backend";
@@ -125,18 +125,24 @@ export async function listAdminProducts(
     .order("created_at", { ascending: false })
     .range(from, to);
 
-  if (error && (error.code === "42703" || error.message?.includes("column"))) {
+  if (
+    error &&
+    (error.code === "42703" ||
+      error.code === "PGRST204" ||
+      error.message?.includes("column") ||
+      error.message?.includes("schema cache"))
+  ) {
     const fallback = await supabase
       .from("products")
       .select(LEGACY_ADMIN_PRODUCT_SELECT, { count: "exact" })
       .order("created_at", { ascending: false })
       .range(from, to);
 
-    if (fallback.error) throw fallback.error;
+    if (fallback.error) throw toAppError(fallback.error, "Failed to load product catalog.");
     rawRecords = (fallback.data ?? []) as unknown as ProductRecordWithRelations[];
     totalCount = fallback.count ?? 0;
   } else if (error) {
-    throw error;
+    throw toAppError(error, "Failed to load product catalog.");
   } else {
     rawRecords = (data ?? []) as unknown as ProductRecordWithRelations[];
     totalCount = count ?? 0;
@@ -161,7 +167,7 @@ export async function createCategory(input: { name: string; slug?: string }) {
     .maybeSingle();
 
   if (error) {
-    throw error;
+    throw toAppError(error, "Failed to create category.");
   }
 
   revalidateCommercePaths();
@@ -185,7 +191,7 @@ export async function updateCategory(
     .maybeSingle();
 
   if (error) {
-    throw error;
+    throw toAppError(error, "Failed to update category.");
   }
 
   if (!data) {
@@ -202,7 +208,7 @@ export async function deleteCategory(categoryId: string) {
   const { error } = await adminClient.from("categories").delete().eq("id", categoryId);
 
   if (error) {
-    throw error;
+    throw toAppError(error, "Failed to delete category.");
   }
 
   revalidateCommercePaths();
@@ -257,7 +263,13 @@ async function createProductFallback(adminClient: AdminClient, input: ProductInp
     .select("id")
     .maybeSingle();
 
-  if (productError && (productError.code === "42703" || productError.message?.includes("column"))) {
+  if (
+    productError &&
+    (productError.code === "42703" ||
+      productError.code === "PGRST204" ||
+      productError.message?.includes("column") ||
+      productError.message?.includes("schema cache"))
+  ) {
     const legacyRes = await adminClient
       .from("products")
       .insert({
@@ -267,7 +279,6 @@ async function createProductFallback(adminClient: AdminClient, input: ProductInp
         price: input.price,
         discount_price: input.discountPrice ?? null,
         category_id: targetCategory,
-        collection_id: targetCategory,
         gender: input.gender,
         featured: input.featured ?? false,
         status: input.status,
@@ -336,7 +347,13 @@ async function updateProductFallback(adminClient: AdminClient, productId: string
     })
     .eq("id", productId);
 
-  if (productError && (productError.code === "42703" || productError.message?.includes("column"))) {
+  if (
+    productError &&
+    (productError.code === "42703" ||
+      productError.code === "PGRST204" ||
+      productError.message?.includes("column") ||
+      productError.message?.includes("schema cache"))
+  ) {
     const legacyRes = await adminClient
       .from("products")
       .update({
@@ -346,7 +363,6 @@ async function updateProductFallback(adminClient: AdminClient, productId: string
         price: input.price,
         discount_price: input.discountPrice ?? null,
         category_id: targetCategory,
-        collection_id: targetCategory,
         gender: input.gender,
         featured: input.featured ?? false,
         status: input.status,
@@ -357,7 +373,7 @@ async function updateProductFallback(adminClient: AdminClient, productId: string
   }
 
   if (productError) {
-    throw productError;
+    throw toAppError(productError, "Failed to update product.");
   }
 
   await adminClient.from("product_images").delete().eq("product_id", productId);
@@ -502,7 +518,42 @@ export async function bulkUpdateProductLabels(
     .in("id", productIds);
 
   if (error) {
-    throw error;
+    throw toAppError(error, "Failed to bulk update product labels.");
+  }
+
+  revalidateCommercePaths();
+}
+
+export async function bulkUpdateProductStatus(
+  productIds: string[],
+  status: "draft" | "active" | "archived",
+) {
+  if (!productIds.length) return;
+  const adminClient = await createAuthorizedAdminClient();
+
+  const { error } = await adminClient
+    .from("products")
+    .update({ status })
+    .in("id", productIds);
+
+  if (error) {
+    throw toAppError(error, "Failed to bulk update product status.");
+  }
+
+  revalidateCommercePaths();
+}
+
+export async function bulkDeleteProducts(productIds: string[]) {
+  if (!productIds.length) return;
+  const adminClient = await createAuthorizedAdminClient();
+
+  const { error } = await adminClient
+    .from("products")
+    .delete()
+    .in("id", productIds);
+
+  if (error) {
+    throw toAppError(error, "Failed to bulk delete products.");
   }
 
   revalidateCommercePaths();
@@ -514,7 +565,7 @@ export async function deleteProduct(productId: string) {
   const { error } = await adminClient.from("products").delete().eq("id", productId);
 
   if (error) {
-    throw error;
+    throw toAppError(error, "Failed to delete product.");
   }
 
   revalidateCommercePaths();
@@ -530,7 +581,7 @@ export async function duplicateProduct(productId: string) {
     .maybeSingle();
 
   if (error) {
-    throw error;
+    throw toAppError(error, "Failed to duplicate product.");
   }
 
   if (!data) {
@@ -582,7 +633,7 @@ export async function archiveProduct(productId: string) {
     .maybeSingle();
 
   if (error) {
-    throw error;
+    throw toAppError(error, "Failed to archive product.");
   }
 
   if (!data) {
@@ -603,11 +654,11 @@ export async function listAdminCollections() {
     ]);
 
   if (categoriesError) {
-    throw categoriesError;
+    throw toAppError(categoriesError, "Failed to load categories.");
   }
 
   if (productsError) {
-    throw productsError;
+    throw toAppError(productsError, "Failed to load products.");
   }
 
   const productCounts = new Map<string, number>();
@@ -676,6 +727,6 @@ export async function deleteMediaAsset(id: string, storagePath: string, bucket =
   const { error } = await adminClient.from("media_library").delete().eq("id", id);
   
   if (error) {
-    throw error;
+    throw toAppError(error, "Failed to delete media asset.");
   }
 }

@@ -3,7 +3,9 @@
 import { handleActionError, revalidateAdmin } from "@/lib/server/action-helpers";
 import {
   archiveProduct,
+  bulkDeleteProducts,
   bulkUpdateProductLabels,
+  bulkUpdateProductStatus,
   createCategory,
   createProduct,
   deleteCategory,
@@ -199,5 +201,28 @@ export async function bulkUpdateProductLabelsAction(
     revalidateAdmin();
   } catch (error) {
     handleActionError(error, "Failed to execute bulk label update.");
+  }
+}
+
+export async function bulkUpdateProductStatusAction(
+  productIds: string[],
+  status: "draft" | "active" | "archived",
+) {
+  try {
+    await assertActionOrigin();
+    await bulkUpdateProductStatus(productIds, status);
+    revalidateAdmin();
+  } catch (error) {
+    handleActionError(error, "Failed to execute bulk status update.");
+  }
+}
+
+export async function bulkDeleteProductsAction(productIds: string[]) {
+  try {
+    await assertActionOrigin();
+    await bulkDeleteProducts(productIds);
+    revalidateAdmin();
+  } catch (error) {
+    handleActionError(error, "Failed to execute bulk delete.");
   }
 }

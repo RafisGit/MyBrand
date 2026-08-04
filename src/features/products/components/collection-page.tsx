@@ -417,20 +417,6 @@ export function CollectionPage({
             </div>
           ) : null}
 
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-[#8d7d6b]">
-                Showing
-              </p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-[#111111] sm:text-3xl md:text-4xl">
-                {filteredProducts.length} curated pieces
-              </h2>
-            </div>
-            <p className="hidden max-w-lg text-right text-sm leading-7 text-[#5f5a53] sm:block">
-              Built around calm studio imagery, clean typography, and enough breathing room for the product to lead.
-            </p>
-          </div>
-
           {filteredProducts.length ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
               {filteredProducts.map((entry) => (

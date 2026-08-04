@@ -4,7 +4,7 @@ import { requireAdminUser, requireAuthenticatedUser } from "@/lib/auth";
 import type { Json } from "@/lib/supabase/database.types";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import type { DbOrder, PaymentStatus } from "@/types/backend";
-import type { Address, DashboardMetric, Order } from "@/types";
+import type { Address, DashboardMetric, Order, PaymentMethod } from "@/types";
 import { AppError } from "@/lib/utils/errors";
 import { formatCompactNumber, formatCurrency } from "@/lib/utils";
 
@@ -126,7 +126,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetric[]> {
 
 export async function createOrderFromCheckoutPayload(input: {
   items: { color: string; productId: string; quantity: number; size: string }[];
-  paymentMethod: "stripe" | "sslcommerz";
+  paymentMethod: PaymentMethod;
   paymentReference?: string;
   paymentStatus?: PaymentStatus;
   shippingAddress: Address;
@@ -184,11 +184,18 @@ export async function createOrderFromCheckoutPayload(input: {
     };
   });
 
+  const dbPaymentMethod =
+    input.paymentMethod === "cod"
+      ? "cash_on_delivery"
+      : input.paymentMethod === "stripe"
+        ? "stripe"
+        : "sslcommerz";
+
   const { data, error } = await supabase.rpc("create_order", {
     p_items: rpcItems,
     p_shipping_address: input.shippingAddress as unknown as Json,
     p_phone: input.shippingAddress.phone,
-    p_payment_method: input.paymentMethod,
+    p_payment_method: dbPaymentMethod,
     p_payment_reference: input.paymentReference ?? null,
     p_payment_status: input.paymentStatus ?? "unpaid",
   });

@@ -145,7 +145,7 @@ export function CartSheet() {
               <div className="flex items-center justify-between text-sm text-zinc-600">
                 <span>Shipping</span>
                 <span className="font-semibold text-black">
-                  {subtotal > 300 ? "Free" : formatCurrency(25)}
+                  {subtotal >= 5000 ? "Free" : formatCurrency(80)}
                 </span>
               </div>
               <Button asChild className="w-full">

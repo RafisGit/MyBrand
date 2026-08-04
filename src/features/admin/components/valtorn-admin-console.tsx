@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
@@ -10,21 +10,21 @@ import {
   CheckSquare,
   Copy,
   Filter,
-  Layers3,
   Loader2,
   PackageSearch,
   Search,
-  Settings2,
-  ShieldCheck,
   ShoppingCart,
   Square,
+  Tag,
   Trash2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   archiveProductAction,
-  bulkUpdateProductLabelsAction,
+  bulkDeleteProductsAction,
+  bulkUpdateProductStatusAction,
   createCategoryAction,
   createProductAction,
   deleteCategoryAction,
@@ -54,9 +54,26 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
+import dynamic from "next/dynamic";
+import { PRODUCT_LABELS } from "@/lib/constants/product-labels";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { ImageUploadZone } from "./image-upload-zone";
-import { HomepageEditor } from "./homepage-editor";
+import { ManageLabelsModal } from "./manage-labels-modal";
+
+const NewsletterAdminManager = dynamic(
+  () => import("@/features/admin/components/newsletter-admin-manager").then((mod) => mod.NewsletterAdminManager),
+  { loading: () => <div className="p-8 text-center text-xs text-zinc-400">Loading Newsletter Manager...</div> }
+);
+
+const HomepageEditor = dynamic(
+  () => import("./homepage-editor").then((mod) => mod.HomepageEditor),
+  { loading: () => <div className="p-8 text-center text-xs text-zinc-400">Loading Homepage Editor...</div> }
+);
+
+const CheckoutSettingsTab = dynamic(
+  () => import("./checkout-settings-tab").then((mod) => mod.CheckoutSettingsTab),
+  { loading: () => <div className="p-8 text-center text-xs text-zinc-400">Loading Checkout Controls...</div> }
+);
 
 
 type ProductFormState = {
@@ -83,10 +100,15 @@ type ProductFormState = {
   }[];
 };
 
-function extractCleanMessage(str: string, defaultMsg: string): string {
-  if (!str) return defaultMsg;
+function extractCleanMessage(rawStr: string, defaultMsg = "An error occurred"): string {
+  if (!rawStr || typeof rawStr !== "string") return defaultMsg;
+  const str = rawStr.trim();
 
-  // 1. Try standard JSON parsing
+  if (str.startsWith("[object ") || str.includes("[object Event]") || str.includes("[object Object]")) {
+    return defaultMsg;
+  }
+
+  // 1. JSON error string handling
   try {
     const parsed = JSON.parse(str);
     if (Array.isArray(parsed) && parsed[0]?.message) {
@@ -99,7 +121,7 @@ function extractCleanMessage(str: string, defaultMsg: string): string {
     }
     if (typeof parsed === "object" && parsed !== null && "message" in parsed) {
       const msg = String((parsed as { message: unknown }).message || "");
-      if (msg && msg !== "...") return msg;
+      if (msg && msg !== "..." && !msg.startsWith("[object ")) return msg;
     }
   } catch {
     // Not JSON
@@ -126,6 +148,10 @@ function extractCleanMessage(str: string, defaultMsg: string): string {
 
 function getErrorMessage(error: unknown, defaultMessage = "An error occurred"): string {
   if (!error) return defaultMessage;
+
+  if (typeof window !== "undefined" && error instanceof Event) {
+    return defaultMessage;
+  }
 
   if (typeof error === "string") {
     return extractCleanMessage(error, defaultMessage);
@@ -822,6 +848,7 @@ function ProductManagementTab({
   const [labelFilter, setLabelFilter] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkPending, startTransition] = useTransition();
+  const [labelsModalOpen, setLabelsModalOpen] = useState(false);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -847,6 +874,11 @@ function ProductManagementTab({
     });
   }, [products, searchQuery, labelFilter]);
 
+  const selectedProducts = useMemo(
+    () => products.filter((p) => selectedIds.has(p.id)),
+    [products, selectedIds],
+  );
+
   const toggleSelectAll = () => {
     if (selectedIds.size === filteredProducts.length) {
       setSelectedIds(new Set());
@@ -867,33 +899,48 @@ function ProductManagementTab({
     });
   };
 
-  const handleBulkAction = (updates: Record<string, boolean>, labelName: string) => {
-    if (!selectedIds.size) {
-      toast.error("Please select at least one product.");
-      return;
-    }
+  const handleBulkStatus = useCallback(
+    (status: "draft" | "active" | "archived") => {
+      if (!selectedIds.size) return;
+      startTransition(async () => {
+        try {
+          await bulkUpdateProductStatusAction(Array.from(selectedIds), status);
+          toast.success(
+            `Set ${selectedIds.size} product(s) to "${status}".`,
+          );
+          setSelectedIds(new Set());
+          router.refresh();
+        } catch (error) {
+          toast.error(getErrorMessage(error, "Unable to update product status."));
+        }
+      });
+    },
+    [selectedIds, startTransition, router],
+  );
 
+  const handleBulkDelete = useCallback(() => {
+    if (!selectedIds.size) return;
+    if (
+      !window.confirm(
+        `Permanently delete ${selectedIds.size} product(s)? This action cannot be undone.`,
+      )
+    )
+      return;
     startTransition(async () => {
       try {
-        await bulkUpdateProductLabelsAction(Array.from(selectedIds), updates);
-        toast.success(`Applied "${labelName}" to ${selectedIds.size} product(s).`);
+        await bulkDeleteProductsAction(Array.from(selectedIds));
+        toast.success(`Deleted ${selectedIds.size} product(s).`);
         setSelectedIds(new Set());
         router.refresh();
       } catch (error) {
-        toast.error(getErrorMessage(error, "Unable to execute bulk update."));
+        toast.error(getErrorMessage(error, "Unable to delete products."));
       }
     });
-  };
+  }, [selectedIds, startTransition, router]);
 
   const labelFilters = [
     { key: "all", label: "All Products" },
-    { key: "featured", label: "Featured" },
-    { key: "new_arrival", label: "New Arrivals" },
-    { key: "best_seller", label: "Best Sellers" },
-    { key: "trending", label: "Trending" },
-    { key: "limited_edition", label: "Limited Edition" },
-    { key: "recommended", label: "Recommended" },
-    { key: "on_sale", label: "On Sale" },
+    ...PRODUCT_LABELS.map((l) => ({ key: l.filterKey, label: l.label })),
   ];
 
   return (
@@ -926,62 +973,93 @@ function ProductManagementTab({
             />
           </div>
 
-          {/* Bulk Action Controls */}
+          {/* Compact Bulk Action Bar */}
           {selectedIds.size > 0 ? (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 p-2 text-xs">
-              <span className="font-semibold text-amber-300">
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 to-amber-600/5 p-2.5 text-xs backdrop-blur-sm">
+              <span className="flex items-center gap-1.5 font-bold text-amber-300">
+                <CheckSquare className="h-3.5 w-3.5" />
                 {selectedIds.size} selected
               </span>
-              <div className="h-4 w-px bg-amber-500/30" />
+              <div className="h-5 w-px bg-amber-500/25" />
+
+              {/* Labels Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isBulkPending}
+                onClick={() => setLabelsModalOpen(true)}
+                className="h-7 gap-1.5 rounded-lg border border-white/10 bg-white/[0.06] px-3 text-[11px] font-bold text-white hover:bg-white/15 hover:text-white transition-all"
+              >
+                <Tag className="h-3 w-3" />
+                Labels
+              </Button>
+
+              {/* Status Dropdown */}
               <select
                 disabled={isBulkPending}
                 onChange={(e) => {
-                  const val = e.target.value;
+                  const val = e.target.value as "draft" | "active" | "archived";
                   if (!val) return;
-                  if (val === "mark_featured") handleBulkAction({ featured: true }, "Mark as Featured");
-                  if (val === "remove_featured") handleBulkAction({ featured: false }, "Remove Featured");
-                  if (val === "mark_bestseller") handleBulkAction({ bestSeller: true }, "Mark as Best Seller");
-                  if (val === "remove_bestseller") handleBulkAction({ bestSeller: false }, "Remove Best Seller");
-                  if (val === "mark_newarrival") handleBulkAction({ newArrival: true }, "Mark as New Arrival");
-                  if (val === "remove_newarrival") handleBulkAction({ newArrival: false }, "Remove New Arrival");
-                  if (val === "mark_trending") handleBulkAction({ trending: true }, "Mark as Trending");
-                  if (val === "remove_trending") handleBulkAction({ trending: false }, "Remove Trending");
-                  if (val === "mark_limited") handleBulkAction({ limitedEdition: true }, "Mark as Limited Edition");
-                  if (val === "remove_limited") handleBulkAction({ limitedEdition: false }, "Remove Limited Edition");
-                  if (val === "mark_recommended") handleBulkAction({ recommended: true }, "Mark as Recommended");
-                  if (val === "remove_recommended") handleBulkAction({ recommended: false }, "Remove Recommended");
-                  if (val === "mark_onsale") handleBulkAction({ onSale: true }, "Mark as On Sale");
-                  if (val === "remove_onsale") handleBulkAction({ onSale: false }, "Remove On Sale");
+                  handleBulkStatus(val);
                   e.target.value = "";
                 }}
-                className="h-8 rounded-lg border border-amber-500/30 bg-[#161616] px-3 text-xs text-amber-200 outline-none cursor-pointer font-medium"
+                className="h-7 rounded-lg border border-white/10 bg-white/[0.06] px-2.5 text-[11px] font-bold text-white outline-none cursor-pointer hover:bg-white/10 transition-all appearance-none"
               >
-                <option value="">Bulk Actions...</option>
-                <option value="mark_featured">Mark as Featured</option>
-                <option value="remove_featured">Remove Featured</option>
-                <option value="mark_bestseller">Mark as Best Seller</option>
-                <option value="remove_bestseller">Remove Best Seller</option>
-                <option value="mark_newarrival">Mark as New Arrival</option>
-                <option value="remove_newarrival">Remove New Arrival</option>
-                <option value="mark_trending">Mark as Trending</option>
-                <option value="remove_trending">Remove Trending</option>
-                <option value="mark_limited">Mark as Limited Edition</option>
-                <option value="remove_limited">Remove Limited Edition</option>
-                <option value="mark_recommended">Mark as Recommended</option>
-                <option value="remove_recommended">Remove Recommended</option>
-                <option value="mark_onsale">Mark as On Sale</option>
-                <option value="remove_onsale">Remove On Sale</option>
+                <option value="">Status</option>
+                <option value="active">Set Active</option>
+                <option value="draft">Set Draft</option>
+                <option value="archived">Set Archived</option>
               </select>
+
+              {/* Archive Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isBulkPending}
+                onClick={() => handleBulkStatus("archived")}
+                className="h-7 gap-1.5 rounded-lg border border-white/10 bg-white/[0.06] px-3 text-[11px] font-bold text-white hover:bg-white/15 hover:text-white transition-all"
+              >
+                <Archive className="h-3 w-3" />
+                Archive
+              </Button>
+
+              {/* Delete Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isBulkPending}
+                onClick={handleBulkDelete}
+                className="h-7 gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 text-[11px] font-bold text-rose-300 hover:bg-rose-500/25 hover:text-rose-200 transition-all"
+              >
+                <Trash2 className="h-3 w-3" />
+                Delete
+              </Button>
+
+              <div className="h-5 w-px bg-amber-500/20" />
+
+              {/* Deselect */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedIds(new Set())}
-                className="h-8 text-xs text-zinc-400 hover:text-white"
+                className="h-7 gap-1 px-2 text-[11px] text-zinc-400 hover:text-white transition-all"
               >
-                Deselect All
+                <X className="h-3 w-3" />
+                Clear
               </Button>
+
+              {isBulkPending && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-400 ml-1" />
+              )}
             </div>
           ) : null}
+
+          {/* Manage Labels Modal */}
+          <ManageLabelsModal
+            open={labelsModalOpen}
+            onOpenChange={setLabelsModalOpen}
+            selectedProducts={selectedProducts}
+          />
         </div>
 
         {/* Merchandising Label Filter Pills */}
@@ -1079,50 +1157,20 @@ function ProductManagementTab({
                       <span className="text-[10px] uppercase tracking-wider text-zinc-400 font-bold mr-1">
                         Labels:
                       </span>
-                      {product.featured ? (
-                        <Badge className="bg-indigo-600/30 text-indigo-200 border border-indigo-400/50 font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
-                          Featured
+                      {PRODUCT_LABELS.filter((def) => product[def.key]).map((def) => (
+                        <Badge
+                          key={def.key}
+                          className={cn(
+                            def.badgeClassName,
+                            "font-bold text-[10px] uppercase tracking-wider px-2 py-0.5",
+                          )}
+                        >
+                          {def.label}
                         </Badge>
-                      ) : null}
-                      {product.bestSeller ? (
-                        <Badge className="bg-amber-600/30 text-amber-200 border border-amber-400/50 font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
-                          Best Seller
-                        </Badge>
-                      ) : null}
-                      {product.newArrival ? (
-                        <Badge className="bg-emerald-600/30 text-emerald-200 border border-emerald-400/50 font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
-                          New Arrival
-                        </Badge>
-                      ) : null}
-                      {product.trending ? (
-                        <Badge className="bg-orange-600/30 text-orange-200 border border-orange-400/50 font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
-                          Trending
-                        </Badge>
-                      ) : null}
-                      {product.limitedEdition ? (
-                        <Badge className="bg-purple-600/30 text-purple-200 border border-purple-400/50 font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
-                          Limited Edition
-                        </Badge>
-                      ) : null}
-                      {product.recommended ? (
-                        <Badge className="bg-sky-600/30 text-sky-200 border border-sky-400/50 font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
-                          Recommended
-                        </Badge>
-                      ) : null}
-                      {product.onSale ? (
-                        <Badge className="bg-rose-600/30 text-rose-200 border border-rose-400/50 font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
-                          On Sale
-                        </Badge>
-                      ) : null}
-                      {!product.featured &&
-                      !product.bestSeller &&
-                      !product.newArrival &&
-                      !product.trending &&
-                      !product.limitedEdition &&
-                      !product.recommended &&
-                      !product.onSale ? (
+                      ))}
+                      {PRODUCT_LABELS.every((def) => !product[def.key]) && (
                         <span className="text-xs text-zinc-500 italic">None</span>
-                      ) : null}
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 text-sm font-semibold">
@@ -1305,8 +1353,13 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
           <TabsTrigger value="collections" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Collections</TabsTrigger>
           <TabsTrigger value="orders" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Orders</TabsTrigger>
           <TabsTrigger value="customers" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Customers</TabsTrigger>
+          <TabsTrigger value="newsletter" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Newsletter</TabsTrigger>
           <TabsTrigger value="settings" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Settings</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="newsletter" className="space-y-6">
+          <NewsletterAdminManager />
+        </TabsContent>
 
         <TabsContent value="homepage" className="space-y-6">
           <HomepageEditor sections={data.homepageSections || []} />
@@ -1709,48 +1762,7 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">
-          <div className="grid gap-6 xl:grid-cols-3">
-            <SectionCard>
-              <div className="flex items-center gap-3">
-                <Settings2 className="h-5 w-5 text-[#d8c0a1]" />
-                <h2 className="text-2xl font-semibold tracking-tight text-[#f7f2eb]">
-                  Brand Settings
-                </h2>
-              </div>
-              <div className="mt-6 space-y-4 text-sm leading-7 text-[#a69f94]">
-                <p>Brand: VALTORN</p>
-                <p>Positioning: Men&apos;s luxury streetwear</p>
-                <p>Design system: dark, minimal, premium enterprise dashboard</p>
-              </div>
-            </SectionCard>
-
-            <SectionCard>
-              <div className="flex items-center gap-3">
-                <Layers3 className="h-5 w-5 text-[#d8c0a1]" />
-                <h2 className="text-2xl font-semibold tracking-tight text-[#f7f2eb]">
-                  Content Modules
-                </h2>
-              </div>
-              <div className="mt-6 space-y-4 text-sm leading-7 text-[#a69f94]">
-                <p>Hero headlines, collection promotions, banners, and homepage modules are ready to be layered into dedicated settings tables.</p>
-                <p>The current admin rebuild prioritizes secure access, product operations, collections, orders, customers, and media workflows.</p>
-              </div>
-            </SectionCard>
-
-            <SectionCard>
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="h-5 w-5 text-[#d8c0a1]" />
-                <h2 className="text-2xl font-semibold tracking-tight text-[#f7f2eb]">
-                  Security
-                </h2>
-              </div>
-              <div className="mt-6 space-y-4 text-sm leading-7 text-[#a69f94]">
-                <p>Admin access is granted by role, not hardcoded credentials.</p>
-                <p>Protected routes block unauthorized `/admin` pages and admin APIs.</p>
-                <p>Session synchronization now persists Supabase auth cookies on the server response before redirect decisions are made.</p>
-              </div>
-            </SectionCard>
-          </div>
+          <CheckoutSettingsTab />
         </TabsContent>
       </Tabs>
     </div>

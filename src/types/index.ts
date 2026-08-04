@@ -1,6 +1,12 @@
 export type ProductCategory = string;
 
-export type PaymentMethod = "stripe" | "sslcommerz";
+export type PaymentMethod =
+  | "cod"
+  | "bkash"
+  | "nagad"
+  | "rocket"
+  | "sslcommerz"
+  | "stripe";
 
 export type OrderStatus =
   | "pending"
@@ -63,6 +69,12 @@ export interface Address {
   region: string;
   postalCode: string;
   country: string;
+  division?: string;
+  district?: string;
+  upazila?: string;
+  area?: string;
+  landmark?: string;
+  fullAddress?: string;
 }
 
 export interface OrderItem {

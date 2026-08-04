@@ -15,6 +15,7 @@ export function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [results, setResults] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -24,6 +25,7 @@ export function GlobalSearch() {
     if (!trimmed) {
       setResults([]);
       setIsLoading(false);
+      setSelectedIndex(-1);
       return;
     }
 
@@ -34,9 +36,11 @@ export function GlobalSearch() {
         if (res.ok) {
           const json = await res.json();
           setResults(json.data || []);
+          setSelectedIndex(-1);
         }
       } catch {
         setResults([]);
+        setSelectedIndex(-1);
       } finally {
         setIsLoading(false);
       }
@@ -45,7 +49,7 @@ export function GlobalSearch() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Handle outside click & Esc key
+  // Handle outside click, Esc key, Shortcut & Arrow Navigation
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -54,14 +58,29 @@ export function GlobalSearch() {
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsOpen(false);
-        inputRef.current?.blur();
-      }
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         inputRef.current?.focus();
         setIsOpen(true);
+        return;
+      }
+
+      if (!isOpen) return;
+
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        inputRef.current?.blur();
+        setSelectedIndex(-1);
+      } else if (e.key === "ArrowDown") {
+        if (results.length > 0) {
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+        }
+      } else if (e.key === "ArrowUp") {
+        if (results.length > 0) {
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+        }
       }
     };
 
@@ -71,19 +90,31 @@ export function GlobalSearch() {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [isOpen, results]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedIndex >= 0 && selectedIndex < results.length) {
+      const selectedProduct = results[selectedIndex];
+      setIsOpen(false);
+      setQuery("");
+      setSelectedIndex(-1);
+      inputRef.current?.blur();
+      router.push(`/products/${selectedProduct.slug}`);
+      return;
+    }
+
     if (!query.trim()) return;
     setIsOpen(false);
     inputRef.current?.blur();
+    setSelectedIndex(-1);
     router.push(`/products?q=${encodeURIComponent(query.trim())}`);
   };
 
   const handleSelectProduct = () => {
     setIsOpen(false);
     setQuery("");
+    setSelectedIndex(-1);
   };
 
   return (
@@ -108,6 +139,7 @@ export function GlobalSearch() {
             onClick={() => {
               setQuery("");
               setResults([]);
+              setSelectedIndex(-1);
               inputRef.current?.focus();
             }}
             className="absolute right-2.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-zinc-400 hover:text-black"
@@ -134,31 +166,41 @@ export function GlobalSearch() {
               <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ccb79d]">
                 Products ({results.length})
               </p>
-              {results.map((product) => (
-                <Link
-                  key={product.id}
-                  href={`/products/${product.slug}`}
-                  onClick={handleSelectProduct}
-                  className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-white/10"
-                >
-                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
-                    <Image
-                      src={product.images[0]}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                      sizes="40px"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium text-white">{product.name}</p>
-                    <p className="text-[10px] text-zinc-400 capitalize">{product.category}</p>
-                  </div>
-                  <p className="text-xs font-semibold text-[#f5efe7]">
-                    {formatCurrency(product.price)}
-                  </p>
-                </Link>
-              ))}
+              {results.map((product, idx) => {
+                const isSelected = selectedIndex === idx;
+
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/products/${product.slug}`}
+                    onClick={handleSelectProduct}
+                    className={`flex items-center gap-3 rounded-xl p-2 transition ${
+                      isSelected ? "bg-white/15 border-l-2 border-[#ccb79d]" : "hover:bg-white/10"
+                    }`}
+                  >
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+                      <Image
+                        src={product.images[0]}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-medium text-white">{product.name}</p>
+                      <p className="text-[10px] text-zinc-400 capitalize">
+                        {typeof product.category === "object" && product.category !== null
+                          ? (product.category as { name?: string }).name
+                          : String(product.category || "")}
+                      </p>
+                    </div>
+                    <p className="text-xs font-semibold text-[#f5efe7]">
+                      {formatCurrency(product.price)}
+                    </p>
+                  </Link>
+                );
+              })}
 
               <Link
                 href={`/products?q=${encodeURIComponent(query.trim())}`}

@@ -77,7 +77,10 @@ export function AdminOverview({
                   {product.name}
                 </p>
                 <p className="mt-2 text-sm text-zinc-600">
-                  {product.category} / {product.collection}
+                  {typeof product.category === "object" && product.category !== null
+                    ? (product.category as { name?: string }).name
+                    : String(product.category || "")}{" "}
+                  / {product.collection}
                 </p>
               </div>
               <p className="text-sm font-medium text-black">

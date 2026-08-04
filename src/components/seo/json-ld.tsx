@@ -51,7 +51,7 @@ export function ProductJsonLd({
   description,
   images,
   price,
-  currency = "USD",
+  currency = "BDT",
   sku,
   availability = "InStock",
   url,
