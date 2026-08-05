@@ -14,12 +14,12 @@ export function CategoryGrid() {
         description="Each product category is presented with calm, contrast, and dramatic space so the garment reads like a campaign." 
       />
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {categoryHighlights.map((category, index) => (
           <Link
             key={`${category.name}-${index}`}
             href={`/products?category=${encodeURIComponent(category.name)}`}
-            className="group relative isolate overflow-hidden rounded-[2rem] border border-black/10 bg-black/5 transition hover:-translate-y-1 hover:shadow-[0_40px_100px_-60px_rgba(0,0,0,0.45)]"
+            className="group relative isolate overflow-hidden rounded-[1.6rem] sm:rounded-[2rem] border border-black/10 bg-black/5 min-h-[200px] sm:min-h-[280px] flex flex-col justify-end transition hover:-translate-y-1 hover:shadow-[0_40px_100px_-60px_rgba(0,0,0,0.45)]"
           >
             <div className="absolute inset-0 bg-black/10" />
             <Image
@@ -29,12 +29,12 @@ export function CategoryGrid() {
               className="object-cover opacity-90 transition duration-700 group-hover:scale-[1.05]"
               sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
             />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.06),rgba(0,0,0,0.8))]" />
-            <div className="relative p-8 sm:p-10 lg:p-12">
-              <p className="text-xs font-semibold uppercase tracking-[0.32em] text-zinc-300">
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.06),rgba(0,0,0,0.85))]" />
+            <div className="relative p-5 sm:p-10 lg:p-12">
+              <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.28em] text-zinc-300">
                 {category.name}
               </p>
-              <p className="mt-4 max-w-sm text-lg font-semibold tracking-[-0.03em] text-white sm:text-xl">
+              <p className="mt-2 sm:mt-4 max-w-sm text-base sm:text-xl font-semibold tracking-[-0.03em] text-white">
                 {category.description}
               </p>
             </div>

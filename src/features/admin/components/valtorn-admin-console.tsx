@@ -1346,15 +1346,15 @@ export function ValtornAdminConsole({ data }: { data: AdminDashboardData }) {
       </section>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="h-auto flex-wrap gap-2 rounded-[1.8rem] border border-white/10 bg-[#121212] p-2">
-          <TabsTrigger value="overview" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Overview</TabsTrigger>
-          <TabsTrigger value="homepage" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Homepage & Hero</TabsTrigger>
-          <TabsTrigger value="products" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Products</TabsTrigger>
-          <TabsTrigger value="collections" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Collections</TabsTrigger>
-          <TabsTrigger value="orders" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Orders</TabsTrigger>
-          <TabsTrigger value="customers" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Customers</TabsTrigger>
-          <TabsTrigger value="newsletter" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Newsletter</TabsTrigger>
-          <TabsTrigger value="settings" className="text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black font-semibold">Settings</TabsTrigger>
+        <TabsList className="h-auto flex items-center justify-start overflow-x-auto no-scrollbar gap-1.5 rounded-[1.5rem] border border-white/10 bg-[#121212] p-1.5 max-w-full">
+          <TabsTrigger value="overview" className="min-h-[44px] shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black transition">Overview</TabsTrigger>
+          <TabsTrigger value="homepage" className="min-h-[44px] shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black transition">Homepage & Hero</TabsTrigger>
+          <TabsTrigger value="products" className="min-h-[44px] shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black transition">Products</TabsTrigger>
+          <TabsTrigger value="collections" className="min-h-[44px] shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black transition">Collections</TabsTrigger>
+          <TabsTrigger value="orders" className="min-h-[44px] shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black transition">Orders</TabsTrigger>
+          <TabsTrigger value="customers" className="min-h-[44px] shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black transition">Customers</TabsTrigger>
+          <TabsTrigger value="newsletter" className="min-h-[44px] shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black transition">Newsletter</TabsTrigger>
+          <TabsTrigger value="settings" className="min-h-[44px] shrink-0 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-400 hover:text-white data-[state=active]:bg-white data-[state=active]:text-black transition">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="newsletter" className="space-y-6">

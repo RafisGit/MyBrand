@@ -389,15 +389,15 @@ export function AuthExperience({
             onValueChange={(value) => setMode(value as AuthMode)}
             className="space-y-6"
           >
-            <TabsList className="h-auto w-full flex-wrap justify-start gap-2 rounded-[1.6rem] bg-white/[0.05] p-2">
-              <TabsTrigger value="login" className="bg-transparent data-[state=active]:bg-[#f5efe7] data-[state=active]:text-black">
+            <TabsList className="h-auto w-full flex justify-between gap-1.5 rounded-[1.6rem] bg-white/[0.05] p-1.5">
+              <TabsTrigger value="login" className="min-h-[44px] flex-1 rounded-full text-xs font-semibold uppercase tracking-[0.12em] bg-transparent data-[state=active]:bg-[#f5efe7] data-[state=active]:text-black transition">
                 Login
               </TabsTrigger>
-              <TabsTrigger value="register" className="bg-transparent data-[state=active]:bg-[#f5efe7] data-[state=active]:text-black">
+              <TabsTrigger value="register" className="min-h-[44px] flex-1 rounded-full text-xs font-semibold uppercase tracking-[0.12em] bg-transparent data-[state=active]:bg-[#f5efe7] data-[state=active]:text-black transition">
                 Register
               </TabsTrigger>
-              <TabsTrigger value="reset" className="bg-transparent data-[state=active]:bg-[#f5efe7] data-[state=active]:text-black">
-                Forgot Password
+              <TabsTrigger value="reset" className="min-h-[44px] flex-1 rounded-full text-xs font-semibold uppercase tracking-[0.12em] bg-transparent data-[state=active]:bg-[#f5efe7] data-[state=active]:text-black transition">
+                Reset
               </TabsTrigger>
             </TabsList>
 

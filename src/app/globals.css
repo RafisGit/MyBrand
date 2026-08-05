@@ -17,12 +17,19 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background-image:
     radial-gradient(circle at top, rgba(255, 255, 255, 0.92), transparent 42%),
     linear-gradient(180deg, #faf7f2 0%, #f5f3ef 100%);

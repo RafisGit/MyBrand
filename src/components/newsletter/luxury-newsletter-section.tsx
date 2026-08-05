@@ -24,7 +24,7 @@ export function LuxuryNewsletterSection({
     <section
       aria-labelledby="newsletter-heading"
       className={cn(
-        "relative overflow-hidden rounded-[2.6rem] border border-white/8 bg-[#121212] text-white py-20 sm:py-28 px-4 sm:px-6 lg:px-8 shadow-[0_45px_140px_-70px_rgba(0,0,0,1)]",
+        "relative overflow-hidden rounded-[1.8rem] sm:rounded-[2.6rem] border border-white/8 bg-[#121212] text-white py-12 sm:py-28 px-4 sm:px-6 lg:px-8 shadow-[0_45px_140px_-70px_rgba(0,0,0,1)]",
         className
       )}
     >
@@ -55,12 +55,12 @@ export function LuxuryNewsletterSection({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-6"
+          className="space-y-4 sm:space-y-6"
         >
           {/* Small label: PRIVATE MEMBERS */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 backdrop-blur-md">
-            <Sparkles className="h-3.5 w-3.5 text-zinc-400" />
-            <span className="text-[11px] font-medium tracking-[0.25em] text-zinc-300 uppercase">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1 backdrop-blur-md">
+            <Sparkles className="h-3 w-3 text-zinc-400" />
+            <span className="text-[10px] sm:text-[11px] font-medium tracking-[0.25em] text-zinc-300 uppercase">
               PRIVATE MEMBERS
             </span>
           </div>
@@ -68,18 +68,18 @@ export function LuxuryNewsletterSection({
           {/* Large heading */}
           <h2
             id="newsletter-heading"
-            className="text-3xl font-light tracking-tight text-white sm:text-5xl lg:text-6xl uppercase font-serif leading-[1.15]"
+            className="text-2xl font-light tracking-tight text-white sm:text-5xl lg:text-6xl uppercase font-serif leading-[1.15]"
           >
             Join the Private List for{" "}
             <span className="block italic text-zinc-300 font-normal">Capsule Drops,</span>
             <span className="block">Early Access,</span>
-            <span className="block text-zinc-400 font-sans font-light text-2xl sm:text-4xl lg:text-5xl mt-2 tracking-normal lowercase first-letter:uppercase">
+            <span className="block text-zinc-400 font-sans font-light text-xl sm:text-4xl lg:text-5xl mt-1.5 tracking-normal lowercase first-letter:uppercase">
               and exclusive releases.
             </span>
           </h2>
 
           {/* Short description */}
-          <p className="mx-auto max-w-xl text-base sm:text-lg text-zinc-400 font-light leading-relaxed">
+          <p className="mx-auto max-w-xl text-xs sm:text-lg text-zinc-400 font-light leading-relaxed">
             Be the first to discover limited collections, exclusive offers, editorial stories, and members-only product launches.
           </p>
 

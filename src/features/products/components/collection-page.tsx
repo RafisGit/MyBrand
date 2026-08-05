@@ -126,7 +126,7 @@ function CollectionProductCard({
         </Link>
 
         {/* Category / Badge overlay in top-left */}
-        <div className="pointer-events-none absolute left-4 top-4 rounded-full border border-white/12 bg-black/50 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#f5efe7] backdrop-blur-md">
+        <div className="pointer-events-none absolute left-2.5 top-2.5 sm:left-4 sm:top-4 rounded-full border border-white/12 bg-black/50 px-2.5 py-0.5 sm:px-3.5 sm:py-1 text-[8px] sm:text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f5efe7] backdrop-blur-md">
           {entry.meta.badge || entry.meta.categoryLabel}
         </div>
 
@@ -139,46 +139,46 @@ function CollectionProductCard({
             event.stopPropagation();
             toggleItem(entry.product.id);
           }}
-          className={`absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/12 backdrop-blur-md transition-all duration-300 ${
+          className={`absolute right-2.5 top-2.5 sm:right-4 sm:top-4 z-10 inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-white/12 backdrop-blur-md transition-all duration-300 active:scale-95 ${
             isWishlisted
               ? "bg-[#f5efe7] text-black shadow-lg"
               : "bg-black/40 text-white hover:bg-[#f5efe7] hover:text-black"
           }`}
         >
-          <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
+          <Heart className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isWishlisted ? "fill-current" : ""}`} />
         </button>
 
         {/* Centered Glassmorphic Quick Add Button inside Image container */}
-        <div className="absolute inset-x-4 bottom-4 z-10 flex justify-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-4 sm:scale-95 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:scale-100">
+        <div className="absolute inset-x-2 bottom-2 sm:inset-x-4 sm:bottom-4 z-10 flex justify-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-4 sm:scale-95 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:scale-100">
           <Button
             type="button"
             onClick={handleQuickAdd}
-            className="h-11 w-full max-w-[92%] rounded-full border border-white/25 bg-white/90 text-black shadow-lg shadow-black/30 backdrop-blur-md text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 hover:bg-white hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+            className="h-10 sm:h-11 w-full rounded-full border border-white/25 bg-white/90 text-black shadow-lg backdrop-blur-md text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] sm:tracking-[0.2em] transition-all duration-300 hover:bg-white active:scale-[0.96]"
           >
-            <ShoppingBag className="mr-2 h-4 w-4" />
-            Quick Add To Cart
+            <ShoppingBag className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Quick Add</span>
           </Button>
         </div>
       </div>
 
       {/* Info Section below Image */}
-      <div className="space-y-2.5 p-3.5 sm:p-4.5">
+      <div className="space-y-1.5 sm:space-y-2.5 p-3 sm:p-4.5">
         <div>
-          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ccb79d]">
+          <p className="text-[9px] sm:text-[11px] font-semibold uppercase tracking-[0.24em] text-[#ccb79d] truncate">
             {entry.meta.categoryLabel}
           </p>
-          <div className="mt-1 flex items-start justify-between gap-3">
+          <div className="mt-0.5 sm:mt-1 flex flex-col sm:flex-row sm:items-start justify-between gap-0.5 sm:gap-3">
             <Link href={`/products/${entry.product.slug}`} className="block min-w-0 flex-1">
-              <h3 className="truncate text-base sm:text-lg font-semibold tracking-tight text-[#f5efe7] transition-colors duration-200 group-hover:text-[#ccb79d]">
+              <h3 className="truncate text-xs sm:text-lg font-semibold tracking-tight text-[#f5efe7] transition-colors duration-200 group-hover:text-[#ccb79d]">
                 {entry.product.name}
               </h3>
             </Link>
-            <div className="shrink-0 text-right">
-              <p className="text-base sm:text-lg font-bold tracking-tight text-[#f5efe7]">
+            <div className="shrink-0 text-left sm:text-right">
+              <p className="text-xs sm:text-lg font-bold tracking-tight text-[#f5efe7]">
                 {formatCurrency(entry.product.price)}
               </p>
               {entry.product.compareAtPrice ? (
-                <p className="text-[11px] text-[#827b70] line-through">
+                <p className="text-[10px] sm:text-[11px] text-[#827b70] line-through">
                   {formatCurrency(entry.product.compareAtPrice)}
                 </p>
               ) : null}
@@ -187,7 +187,7 @@ function CollectionProductCard({
         </div>
 
         {entry.product.shortDescription ? (
-          <p className="text-xs leading-relaxed text-[#9f988b] line-clamp-2">
+          <p className="hidden sm:block text-xs leading-relaxed text-[#9f988b] line-clamp-2">
             {entry.product.shortDescription}
           </p>
         ) : null}
@@ -418,7 +418,7 @@ export function CollectionPage({
           ) : null}
 
           {filteredProducts.length ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
               {filteredProducts.map((entry) => (
                 <CollectionProductCard key={entry.product.id} entry={entry} />
               ))}

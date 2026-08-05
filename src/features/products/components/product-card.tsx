@@ -48,7 +48,7 @@ export function ProductCard({
       layout
       whileHover={{ y: -4 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative overflow-hidden rounded-[2rem] border border-black/10 bg-white shadow-[0_24px_80px_-60px_rgba(0,0,0,0.35)] flex flex-col justify-between"
+      className="group relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] border border-black/10 bg-white shadow-[0_24px_80px_-60px_rgba(0,0,0,0.35)] flex flex-col justify-between"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-zinc-100">
         <Link href={`/products/${product.slug}`} className="block h-full w-full">
@@ -57,7 +57,7 @@ export function ProductCard({
             alt={product.name}
             fill
             className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105"
-            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
+            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 50vw"
           />
           {product.images[1] ? (
             <Image
@@ -65,14 +65,14 @@ export function ProductCard({
               alt={`${product.name} alternate view`}
               fill
               className="object-cover opacity-0 transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100"
-              sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
+              sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 50vw"
             />
           ) : null}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/20 opacity-30 transition-opacity duration-300 group-hover:opacity-70" />
         </Link>
 
         {/* Top Badges */}
-        <div className="absolute left-4 top-4 z-10 flex flex-wrap gap-1.5 max-w-[70%]">
+        <div className="absolute left-2.5 top-2.5 sm:left-4 sm:top-4 z-10 flex flex-wrap gap-1 max-w-[70%]">
           {(() => {
             const badges: Array<{ label: string; className: string }> = [];
 
@@ -86,23 +86,11 @@ export function ProductCard({
             if (product.newArrival) {
               badges.push({ label: "NEW", className: "bg-emerald-600/90 text-white border-emerald-500/30" });
             }
-            if (product.limitedEdition) {
-              badges.push({ label: "LIMITED", className: "bg-purple-600/90 text-white border-purple-500/30" });
-            }
-            if (product.trending) {
-              badges.push({ label: "TRENDING", className: "bg-orange-600/90 text-white border-orange-500/30" });
-            }
-            if (product.featured) {
-              badges.push({ label: "FEATURED", className: "bg-indigo-600/90 text-white border-indigo-500/30" });
-            }
-            if (product.recommended) {
-              badges.push({ label: "RECOMMENDED", className: "bg-sky-600/90 text-white border-sky-500/30" });
-            }
 
-            return badges.slice(0, 2).map((badge) => (
+            return badges.slice(0, 1).map((badge) => (
               <Badge
                 key={badge.label}
-                className={`uppercase tracking-[0.18em] text-[9px] px-2 py-0.5 backdrop-blur-md shadow-sm border ${badge.className}`}
+                className={`uppercase tracking-[0.16em] text-[8px] sm:text-[9px] px-1.5 py-0.5 backdrop-blur-md shadow-sm border ${badge.className}`}
               >
                 {badge.label}
               </Badge>
@@ -111,15 +99,15 @@ export function ProductCard({
         </div>
 
         {/* Top-right Actions */}
-        <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
+        <div className="absolute right-2.5 top-2.5 sm:right-4 sm:top-4 z-10 flex items-center gap-1.5">
           {showQuickView ? (
             <QuickViewDialog product={product}>
               <button
                 type="button"
                 aria-label={`Quick view ${product.name}`}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/88 text-black backdrop-blur-md transition hover:bg-black hover:text-white shadow-md"
+                className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/88 text-black backdrop-blur-md transition hover:bg-black hover:text-white shadow-md active:scale-95"
               >
-                <Eye className="h-4 w-4" />
+                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
             </QuickViewDialog>
           ) : null}
@@ -131,51 +119,51 @@ export function ProductCard({
               e.stopPropagation();
               toggleItem(product.id);
             }}
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 shadow-md ${
+            className={`inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full backdrop-blur-md transition-all duration-300 shadow-md active:scale-95 ${
               isWishlisted
                 ? "bg-black text-white"
                 : "bg-white/88 text-black hover:bg-black hover:text-white"
             }`}
           >
-            <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
+            <Heart className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isWishlisted ? "fill-current" : ""}`} />
           </button>
         </div>
 
         {/* Centered Glassmorphic Quick Add Button inside Image container */}
-        <div className="absolute inset-x-4 bottom-4 z-10 flex justify-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-4 sm:scale-95 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:scale-100">
+        <div className="absolute inset-x-2 bottom-2 sm:inset-x-4 sm:bottom-4 z-10 flex justify-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] opacity-100 translate-y-0 sm:opacity-0 sm:translate-y-4 sm:scale-95 sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:scale-100">
           <Button
             type="button"
             onClick={handleQuickAdd}
-            className="h-11 w-full max-w-[92%] rounded-full border border-white/40 bg-white/90 text-black shadow-lg backdrop-blur-md text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300 hover:bg-white hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+            className="h-10 sm:h-11 w-full rounded-full border border-white/40 bg-white/90 text-black shadow-lg backdrop-blur-md text-[10px] sm:text-xs font-semibold uppercase tracking-[0.14em] sm:tracking-[0.2em] transition-all duration-300 hover:bg-white active:scale-[0.96]"
           >
-            <ShoppingBag className="mr-2 h-4 w-4" />
-            Quick Add To Cart
+            <ShoppingBag className="mr-1.5 h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Quick Add</span>
           </Button>
         </div>
       </div>
 
       {/* Info Section below Image */}
-      <div className="space-y-2.5 p-3.5 sm:p-4.5">
+      <div className="space-y-1.5 sm:space-y-2.5 p-3 sm:p-4.5">
         <div>
-          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.24em] text-zinc-500">
+          <p className="text-[9px] sm:text-[11px] font-semibold uppercase tracking-[0.24em] text-zinc-500 truncate">
             {product.collection ||
               (typeof product.category === "object" && product.category !== null
                 ? (product.category as { name?: string }).name
                 : String(product.category || "")) ||
               "Valtorn Essential"}
           </p>
-          <div className="mt-1 flex items-start justify-between gap-3">
+          <div className="mt-0.5 sm:mt-1 flex flex-col sm:flex-row sm:items-start justify-between gap-0.5 sm:gap-3">
             <Link href={`/products/${product.slug}`} className="block min-w-0 flex-1">
-              <h3 className="truncate text-base sm:text-lg font-semibold tracking-tight text-black hover:text-zinc-700 transition">
+              <h3 className="truncate text-xs sm:text-lg font-semibold tracking-tight text-black hover:text-zinc-700 transition">
                 {product.name}
               </h3>
             </Link>
-            <div className="shrink-0 text-right">
-              <p className="text-base sm:text-lg font-bold tracking-tight text-black">
+            <div className="shrink-0 text-left sm:text-right">
+              <p className="text-xs sm:text-lg font-bold tracking-tight text-black">
                 {formatCurrency(product.price)}
               </p>
               {product.compareAtPrice ? (
-                <p className="text-[11px] text-zinc-400 line-through">
+                <p className="text-[10px] sm:text-[11px] text-zinc-400 line-through">
                   {formatCurrency(product.compareAtPrice)}
                 </p>
               ) : null}
@@ -184,7 +172,7 @@ export function ProductCard({
         </div>
 
         {product.shortDescription ? (
-          <p className="text-xs leading-relaxed text-zinc-600 line-clamp-2">{product.shortDescription}</p>
+          <p className="hidden sm:block text-xs leading-relaxed text-zinc-600 line-clamp-2">{product.shortDescription}</p>
         ) : null}
       </div>
     </motion.article>

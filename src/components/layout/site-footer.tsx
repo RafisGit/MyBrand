@@ -33,16 +33,16 @@ export function SiteFooter({ hideNewsletter }: SiteFooterProps) {
 
             {/* Navigation Link Groups */}
             {footerGroups.map((group) => (
-              <div key={group.title} className="space-y-4">
+              <div key={group.title} className="space-y-3 sm:space-y-4">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.24em] text-white">
                   {group.title}
                 </h3>
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   {group.links.map((link) => (
                     <Link
                       key={link.label}
                       href={link.href}
-                      className="block text-xs text-zinc-400 transition hover:text-white"
+                      className="block py-1.5 text-xs text-zinc-400 transition hover:text-white"
                     >
                       {link.label}
                     </Link>
@@ -53,34 +53,34 @@ export function SiteFooter({ hideNewsletter }: SiteFooterProps) {
           </div>
         ) : (
           /* OTHER PAGES FOOTER (Includes Newsletter Box) */
-          <div className="grid gap-14 lg:grid-cols-[1.22fr_1fr]">
-            <div className="space-y-7">
+          <div className="grid gap-10 lg:grid-cols-[1.22fr_1fr] lg:gap-14">
+            <div className="space-y-6 sm:space-y-7">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-zinc-500">
+                <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.34em] text-zinc-500">
                   Newsletter
                 </p>
-                <h2 className="mt-5 max-w-xl text-2xl sm:text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
+                <h2 className="mt-3 max-w-xl text-xl sm:text-3xl font-semibold tracking-[-0.04em] text-white leading-snug sm:text-4xl">
                   Join a private list for capsule drops, early access, and editorial releases.
                 </h2>
               </div>
               <LuxuryNewsletterFooter />
-              <p className="text-sm leading-7 text-zinc-500">
+              <p className="text-xs sm:text-sm leading-relaxed text-zinc-500">
                 Designed for luxury product storytelling with a responsive, commerce-ready architecture.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-10 lg:pt-2">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 sm:gap-10 lg:pt-2">
               {footerGroups.map((group) => (
-                <div key={group.title} className="space-y-4">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-white">
+                <div key={group.title} className="space-y-3 sm:space-y-4">
+                  <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-[0.24em] text-white">
                     {group.title}
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {group.links.map((link) => (
                       <Link
                         key={link.label}
                         href={link.href}
-                        className="block py-1.5 text-sm text-zinc-500 transition hover:text-white"
+                        className="block py-1.5 text-xs sm:text-sm text-zinc-500 transition hover:text-white"
                       >
                         {link.label}
                       </Link>

@@ -118,8 +118,22 @@ export function GlobalSearch() {
   };
 
   return (
-    <div ref={searchRef} className="relative w-full max-w-[260px] sm:max-w-[320px]">
-      <form onSubmit={handleSubmit} className="relative flex items-center">
+    <div ref={searchRef} className="relative">
+      {/* Mobile Search Icon Trigger */}
+      <button
+        type="button"
+        aria-label="Open mobile search"
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setTimeout(() => inputRef.current?.focus(), 100);
+        }}
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-black ring-1 ring-black/10 backdrop-blur transition hover:bg-black hover:text-white sm:hidden"
+      >
+        <Search className="h-5 w-5" />
+      </button>
+
+      {/* Desktop Search Input Form */}
+      <form onSubmit={handleSubmit} className="hidden sm:flex relative items-center w-[220px] md:w-[280px] lg:w-[320px]">
         <Search className="pointer-events-none absolute left-3.5 h-3.5 w-3.5 text-zinc-400" />
         <input
           ref={inputRef}
@@ -131,7 +145,7 @@ export function GlobalSearch() {
           }}
           onFocus={() => setIsOpen(true)}
           placeholder="Search collection..."
-          className="h-9 w-full rounded-full border border-black/10 bg-zinc-100/80 pl-9 pr-8 text-xs text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:border-black/30 focus:bg-white focus:ring-1 focus:ring-black/20"
+          className="h-10 w-full rounded-full border border-black/10 bg-zinc-100/80 pl-9 pr-8 text-xs text-zinc-900 placeholder:text-zinc-400 outline-none transition focus:border-black/30 focus:bg-white focus:ring-1 focus:ring-black/20"
         />
         {query ? (
           <button
@@ -142,9 +156,9 @@ export function GlobalSearch() {
               setSelectedIndex(-1);
               inputRef.current?.focus();
             }}
-            className="absolute right-2.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-zinc-400 hover:text-black"
+            className="absolute right-2.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-zinc-400 hover:text-black"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3.5 w-3.5" />
           </button>
         ) : (
           <kbd className="pointer-events-none absolute right-3 hidden rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-[9px] font-medium text-zinc-400 sm:inline-block">
@@ -153,9 +167,95 @@ export function GlobalSearch() {
         )}
       </form>
 
-      {/* Instant Search Results Dropdown */}
+      {/* Mobile Full-Width Floating Search Box */}
+      {isOpen && (
+        <div className="sm:hidden fixed inset-x-3 top-16 z-50 overflow-hidden rounded-3xl border border-white/15 bg-[#0e0e0e]/95 p-3 shadow-2xl backdrop-blur-2xl">
+          <form onSubmit={handleSubmit} className="relative flex items-center">
+            <Search className="pointer-events-none absolute left-4 h-4 w-4 text-zinc-400" />
+            <input
+              autoFocus
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search pieces, categories..."
+              className="h-12 w-full rounded-full border border-white/10 bg-white/10 pl-11 pr-10 text-sm text-white placeholder:text-zinc-400 outline-none focus:border-white/30"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                setQuery("");
+              }}
+              className="absolute right-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </form>
+
+          {query.trim().length > 0 && (
+            <div className="mt-3 max-h-[60vh] overflow-y-auto space-y-1">
+              {isLoading ? (
+                <div className="flex items-center justify-center p-6 text-xs text-zinc-400">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Searching pieces...
+                </div>
+              ) : results.length > 0 ? (
+                <>
+                  <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ccb79d]">
+                    Products ({results.length})
+                  </p>
+                  {results.map((product) => (
+                    <Link
+                      key={product.id}
+                      href={`/products/${product.slug}`}
+                      onClick={handleSelectProduct}
+                      className="flex items-center gap-3 rounded-xl p-2.5 transition hover:bg-white/10 active:bg-white/15"
+                    >
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+                        <Image
+                          src={product.images[0]}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-white">{product.name}</p>
+                        <p className="text-[10px] text-zinc-400 capitalize">
+                          {typeof product.category === "object" && product.category !== null
+                            ? (product.category as { name?: string }).name
+                            : String(product.category || "")}
+                        </p>
+                      </div>
+                      <p className="text-xs font-semibold text-[#f5efe7]">
+                        {formatCurrency(product.price)}
+                      </p>
+                    </Link>
+                  ))}
+
+                  <Link
+                    href={`/products?q=${encodeURIComponent(query.trim())}`}
+                    onClick={() => setIsOpen(false)}
+                    className="mt-2 flex items-center justify-between rounded-xl bg-white/10 px-4 py-3 text-xs font-medium text-[#f5efe7]"
+                  >
+                    <span>View all results for &quot;{query}&quot;</span>
+                    <ArrowRight className="h-4 w-4 text-[#ccb79d]" />
+                  </Link>
+                </>
+              ) : (
+                <div className="p-6 text-center text-xs text-zinc-400">
+                  No pieces match &quot;{query}&quot;
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Desktop Instant Search Results Dropdown */}
       {isOpen && query.trim().length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[#0e0e0e]/95 p-2 shadow-2xl backdrop-blur-xl z-50">
+        <div className="hidden sm:block absolute left-0 right-0 top-full mt-2 min-w-[300px] overflow-hidden rounded-2xl border border-white/10 bg-[#0e0e0e]/95 p-2 shadow-2xl backdrop-blur-xl z-50">
           {isLoading ? (
             <div className="flex items-center justify-center p-6 text-xs text-zinc-400">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

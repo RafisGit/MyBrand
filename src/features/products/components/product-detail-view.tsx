@@ -46,11 +46,11 @@ export function ProductDetailView({ product }: { product: Product }) {
   };
 
   return (
-    <div className="grid gap-5 sm:gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 xl:gap-12">
+    <div className="grid gap-5 sm:gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8 xl:gap-12 pb-24 sm:pb-0">
       <ProductGallery name={product.name} images={product.images} />
 
       <div className="lg:sticky lg:top-28 lg:self-start">
-        <div className="rounded-[1.8rem] sm:rounded-[2.2rem] border border-black/10 bg-white p-4.5 sm:p-6">
+        <div className="rounded-[1.8rem] sm:rounded-[2.2rem] border border-black/10 bg-white p-4.5 sm:p-6 shadow-sm">
           <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {product.featured ? <Badge>Featured</Badge> : null}
             {product.bestSeller ? <Badge variant="secondary">Best Seller</Badge> : null}
@@ -82,8 +82,8 @@ export function ProductDetailView({ product }: { product: Product }) {
             </div>
           </div>
 
-          <div className="mt-3.5 sm:mt-5 space-y-3 sm:space-y-4">
-            <div className="space-y-1 sm:space-y-1.5">
+          <div className="mt-3.5 sm:mt-5 space-y-4 sm:space-y-4">
+            <div className="space-y-1.5">
               <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
                 Size
               </p>
@@ -93,9 +93,9 @@ export function ProductDetailView({ product }: { product: Product }) {
                     key={size}
                     type="button"
                     onClick={() => setSelectedSize(size)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] transition ${
+                    className={`min-h-[44px] min-w-[48px] rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition active:scale-95 ${
                       selectedSize === size
-                        ? "bg-black text-white"
+                        ? "bg-black text-white shadow-md"
                         : "bg-black/5 text-black hover:bg-black hover:text-white"
                     }`}
                   >
@@ -105,7 +105,7 @@ export function ProductDetailView({ product }: { product: Product }) {
               </div>
             </div>
 
-            <div className="space-y-1 sm:space-y-1.5">
+            <div className="space-y-1.5">
               <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
                 Color
               </p>
@@ -115,9 +115,9 @@ export function ProductDetailView({ product }: { product: Product }) {
                     key={color}
                     type="button"
                     onClick={() => setSelectedColor(color)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] transition ${
+                    className={`min-h-[44px] rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition active:scale-95 ${
                       selectedColor === color
-                        ? "bg-black text-white"
+                        ? "bg-black text-white shadow-md"
                         : "bg-black/5 text-black hover:bg-black hover:text-white"
                     }`}
                   >
@@ -127,15 +127,15 @@ export function ProductDetailView({ product }: { product: Product }) {
               </div>
             </div>
 
-            <div className="space-y-1 sm:space-y-1.5">
+            <div className="space-y-1.5">
               <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500">
                 Quantity
               </p>
-              <div className="inline-flex items-center gap-2.5 rounded-full border border-black/10 bg-[#f6f3ee] px-2 py-1">
+              <div className="inline-flex items-center gap-2.5 rounded-full border border-black/10 bg-[#f6f3ee] p-1">
                 <button
                   type="button"
                   onClick={() => setQuantity((current) => Math.max(1, current - 1))}
-                  className="rounded-full px-2.5 py-1 transition hover:bg-black hover:text-white text-xs font-medium"
+                  className="min-h-[40px] min-w-[40px] rounded-full transition hover:bg-black hover:text-white text-sm font-semibold flex items-center justify-center active:scale-95"
                 >
                   -
                 </button>
@@ -145,7 +145,7 @@ export function ProductDetailView({ product }: { product: Product }) {
                 <button
                   type="button"
                   onClick={() => setQuantity((current) => current + 1)}
-                  className="rounded-full px-2.5 py-1 transition hover:bg-black hover:text-white text-xs font-medium"
+                  className="min-h-[40px] min-w-[40px] rounded-full transition hover:bg-black hover:text-white text-sm font-semibold flex items-center justify-center active:scale-95"
                 >
                   +
                 </button>
@@ -153,41 +153,41 @@ export function ProductDetailView({ product }: { product: Product }) {
             </div>
           </div>
 
-          <div className="mt-4 sm:mt-5 flex flex-col gap-2.5">
-            <Button size="lg" className="h-10 sm:h-11 w-full text-xs uppercase tracking-[0.18em]" onClick={handleAddToCart}>
+          <div className="mt-5 flex flex-col gap-3">
+            <Button size="lg" className="h-12 w-full text-xs font-semibold uppercase tracking-[0.18em] rounded-full bg-black text-white hover:bg-zinc-800 active:scale-[0.98]" onClick={handleAddToCart}>
               <ShoppingBag className="mr-2 h-4 w-4" />
               Add to Cart
             </Button>
-            <Button size="lg" variant="outline" className="h-10 sm:h-11 w-full text-xs uppercase tracking-[0.18em]" onClick={handleBuyNow}>
+            <Button size="lg" variant="outline" className="h-12 w-full text-xs font-semibold uppercase tracking-[0.18em] rounded-full border-black/15 text-black hover:bg-black hover:text-white active:scale-[0.98]" onClick={handleBuyNow}>
               Buy Now
             </Button>
           </div>
 
-          <div className="mt-3.5 sm:mt-4 flex items-center gap-2.5 rounded-[1.25rem] bg-black/5 px-3.5 py-2.5 text-xs text-zinc-600">
+          <div className="mt-4 flex items-center gap-2.5 rounded-[1.25rem] bg-black/5 px-3.5 py-3 text-xs text-zinc-600">
             <ShieldCheck className="h-4 w-4 shrink-0 text-black" />
             <span>Secure checkout ready for Stripe & SSLCommerz.</span>
           </div>
 
-          <div className="mt-3.5 sm:mt-4">
+          <div className="mt-4">
             <Accordion type="single" collapsible defaultValue="description">
               <AccordionItem value="description">
-                <AccordionTrigger className="py-2.5 text-xs sm:text-xs font-semibold uppercase tracking-[0.16em]">Description</AccordionTrigger>
+                <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.16em]">Description</AccordionTrigger>
                 <AccordionContent className="text-xs sm:text-sm leading-relaxed text-zinc-600">{product.story}</AccordionContent>
               </AccordionItem>
               <AccordionItem value="shipping">
-                <AccordionTrigger className="py-2.5 text-xs sm:text-xs font-semibold uppercase tracking-[0.16em]">Shipping</AccordionTrigger>
+                <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.16em]">Shipping</AccordionTrigger>
                 <AccordionContent className="text-xs sm:text-sm leading-relaxed text-zinc-600">
                   Free shipping on qualifying orders and global checkout support with Stripe. Bangladesh-specific flows can route through SSLCommerz.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="care">
-                <AccordionTrigger className="py-2.5 text-xs sm:text-xs font-semibold uppercase tracking-[0.16em]">Care Guide</AccordionTrigger>
+                <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.16em]">Care Guide</AccordionTrigger>
                 <AccordionContent className="text-xs sm:text-sm leading-relaxed text-zinc-600">
                   Store folded or on broad hangers, steam lightly, and dry clean when needed to preserve silhouette and fabrication.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="extra">
-                <AccordionTrigger className="py-2.5 text-xs sm:text-xs font-semibold uppercase tracking-[0.16em]">Extra</AccordionTrigger>
+                <AccordionTrigger className="py-3 text-xs font-semibold uppercase tracking-[0.16em]">Extra</AccordionTrigger>
                 <AccordionContent className="text-xs sm:text-sm leading-relaxed text-zinc-600">
                   Materials: {product.materials.join(", ")}. Pair with related pieces in the collection for a complete tonal look.
                 </AccordionContent>
@@ -195,6 +195,22 @@ export function ProductDetailView({ product }: { product: Product }) {
             </Accordion>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Sticky Bottom Action Bar */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-black/10 bg-white/95 p-3.5 backdrop-blur-xl shadow-[0_-10px_35px_rgba(0,0,0,0.12)] flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold text-black">{product.name}</p>
+          <p className="text-sm font-bold text-black">{formatCurrency(product.price * quantity)}</p>
+        </div>
+        <Button
+          size="lg"
+          onClick={handleAddToCart}
+          className="min-h-[48px] px-5 rounded-full bg-black text-white font-semibold uppercase tracking-[0.14em] text-xs shadow-lg active:scale-95 shrink-0"
+        >
+          <ShoppingBag className="mr-1.5 h-4 w-4" />
+          Add to Cart
+        </Button>
       </div>
     </div>
   );

@@ -459,7 +459,7 @@ export function CheckoutExperience() {
                 </Label>
                 <select
                   id="division"
-                  className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-xs sm:text-sm font-medium outline-none focus:border-black transition-all appearance-none cursor-pointer"
+                  className="h-12 sm:h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm font-medium outline-none focus:border-black transition-all appearance-none cursor-pointer"
                   {...form.register("division")}
                 >
                   {BANGLADESH_DIVISIONS.map((div) => (
@@ -480,7 +480,7 @@ export function CheckoutExperience() {
                 </Label>
                 <select
                   id="district"
-                  className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-xs sm:text-sm font-medium outline-none focus:border-black transition-all appearance-none cursor-pointer"
+                  className="h-12 sm:h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm font-medium outline-none focus:border-black transition-all appearance-none cursor-pointer"
                   {...form.register("district")}
                 >
                   {districts.map((dst) => (
@@ -501,7 +501,7 @@ export function CheckoutExperience() {
                 </Label>
                 <select
                   id="upazila"
-                  className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-xs sm:text-sm font-medium outline-none focus:border-black transition-all appearance-none cursor-pointer"
+                  className="h-12 sm:h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm font-medium outline-none focus:border-black transition-all appearance-none cursor-pointer"
                   {...form.register("upazila")}
                 >
                   {upazilas.map((upz) => (
@@ -523,7 +523,7 @@ export function CheckoutExperience() {
                 <Input
                   id="area"
                   placeholder="e.g. House 42, Road 11, Block D"
-                  className="h-10 rounded-xl text-xs sm:text-sm"
+                  className="h-12 sm:h-10 rounded-xl text-sm"
                   {...form.register("area")}
                 />
                 {form.formState.errors.area && (
@@ -539,7 +539,7 @@ export function CheckoutExperience() {
                 <Input
                   id="postalCode"
                   placeholder="1209"
-                  className="h-10 rounded-xl text-xs sm:text-sm font-medium"
+                  className="h-12 sm:h-10 rounded-xl text-sm font-medium"
                   {...form.register("postalCode")}
                 />
                 {form.formState.errors.postalCode && (
@@ -556,7 +556,7 @@ export function CheckoutExperience() {
                   id="fullAddress"
                   rows={2}
                   placeholder="Detailed address for courier delivery rider"
-                  className="rounded-xl text-xs sm:text-sm"
+                  className="rounded-xl text-sm min-h-[52px]"
                   {...form.register("fullAddress")}
                 />
                 {form.formState.errors.fullAddress && (
@@ -572,7 +572,7 @@ export function CheckoutExperience() {
                 <Input
                   id="landmark"
                   placeholder="e.g. Near Bashundhara Gate / Opposite Jamuna Future Park"
-                  className="h-10 rounded-xl text-xs sm:text-sm"
+                  className="h-12 sm:h-10 rounded-xl text-sm"
                   {...form.register("landmark")}
                 />
               </div>
