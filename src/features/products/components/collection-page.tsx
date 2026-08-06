@@ -24,7 +24,16 @@ import {
   type ProductDisplayMeta,
 } from "@/lib/products/storefront-display";
 
-type SortOption = "featured" | "latest" | "price-asc" | "price-desc";
+import { ProductFilterBar } from "@/components/ProductFilterBar/ProductFilterBar";
+
+type SortOption =
+  | "featured"
+  | "latest"
+  | "best-sellers"
+  | "price-asc"
+  | "price-desc"
+  | "alpha-asc"
+  | "alpha-desc";
 
 const filterOptions: { label: string; value: CollectionFilter }[] = [
   { label: "T-Shirts", value: "t-shirts" },
@@ -36,11 +45,13 @@ const filterOptions: { label: string; value: CollectionFilter }[] = [
 
 const sortOptions: { label: string; value: SortOption }[] = [
   { label: "Featured", value: "featured" },
-  { label: "Price Low to High", value: "price-asc" },
-  { label: "Price High to Low", value: "price-desc" },
-  { label: "Latest", value: "latest" },
+  { label: "Newest", value: "latest" },
+  { label: "Best Selling", value: "best-sellers" },
+  { label: "Price Low → High", value: "price-asc" },
+  { label: "Price High → Low", value: "price-desc" },
+  { label: "Alphabetical A–Z", value: "alpha-asc" },
+  { label: "Alphabetical Z–A", value: "alpha-desc" },
 ];
-
 
 import { toSlug } from "@/lib/utils/slug";
 
@@ -63,7 +74,14 @@ function resolveDefaultFilter(category?: string, sort?: string): CollectionFilte
 }
 
 function resolveDefaultSort(sort?: string): SortOption {
-  if (sort === "price-asc" || sort === "price-desc" || sort === "latest") {
+  if (
+    sort === "price-asc" ||
+    sort === "price-desc" ||
+    sort === "latest" ||
+    sort === "best-sellers" ||
+    sort === "alpha-asc" ||
+    sort === "alpha-desc"
+  ) {
     return sort;
   }
 
@@ -322,16 +340,26 @@ export function CollectionPage({
         );
       }
 
+      if (sort === "alpha-asc") {
+        return left.product.name.localeCompare(right.product.name);
+      }
+
+      if (sort === "alpha-desc") {
+        return right.product.name.localeCompare(left.product.name);
+      }
+
+      if (sort === "best-sellers") {
+        const bestSellerDifference =
+          Number(right.product.bestSeller) - Number(left.product.bestSeller);
+        if (bestSellerDifference !== 0) {
+          return bestSellerDifference;
+        }
+      }
+
       const featuredDifference =
         Number(right.product.featured) - Number(left.product.featured);
       if (featuredDifference !== 0) {
         return featuredDifference;
-      }
-
-      const bestSellerDifference =
-        Number(right.product.bestSeller) - Number(left.product.bestSeller);
-      if (bestSellerDifference !== 0) {
-        return bestSellerDifference;
       }
 
       return left.meta.priority - right.meta.priority;
@@ -349,55 +377,15 @@ export function CollectionPage({
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-10 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
 
         <AnimatedSection id="collection-grid" className="space-y-8">
-          <div className="sticky top-20 z-20 rounded-[1.6rem] border border-white/8 bg-[#0d0d0d]/92 p-2.5 sm:p-3.5 shadow-[0_30px_110px_-70px_rgba(0,0,0,1)] backdrop-blur-xl">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="-mx-2.5 overflow-x-auto px-2.5 sm:mx-0 sm:px-0">
-                <div className="flex min-w-max items-center gap-2 sm:gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => startTransition(() => setActiveFilter("all"))}
-                    className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
-                      activeFilter === "all"
-                        ? "bg-[#f5efe7] text-black"
-                        : "border border-white/10 bg-white/[0.04] text-[#b0a99d] hover:bg-white/[0.08] hover:text-[#f5efe7]"
-                    }`}
-                  >
-                    All Pieces
-                  </button>
-                  {activeFilterOptions.map((filter) => (
-                    <button
-                      key={filter.value}
-                      type="button"
-                      onClick={() => startTransition(() => setActiveFilter(filter.value))}
-                      className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition ${
-                        activeFilter === filter.value
-                          ? "bg-[#f5efe7] text-black"
-                          : "border border-white/10 bg-white/[0.04] text-[#b0a99d] hover:bg-white/[0.08] hover:text-[#f5efe7]"
-                      }`}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 shrink-0">
-                <select
-                  value={sort}
-                  onChange={(event) =>
-                    startTransition(() => setSort(event.target.value as SortOption))
-                  }
-                  className="h-9 rounded-full border border-white/10 bg-white/[0.04] px-4 text-xs font-semibold uppercase tracking-[0.16em] text-[#f5efe7] outline-none transition hover:bg-white/[0.08] cursor-pointer"
-                >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="bg-[#101010] text-[#f5efe7]">
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+          <ProductFilterBar
+            categories={activeFilterOptions}
+            activeCategory={activeFilter}
+            onSelectCategory={(cat) => startTransition(() => setActiveFilter(cat))}
+            sortOptions={sortOptions}
+            activeSort={sort}
+            onSelectSort={(s) => startTransition(() => setSort(s as SortOption))}
+            scrollTargetId="collection-grid"
+          />
 
           {query ? (
             <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-[#0d0d0d] px-4 py-3 text-xs text-[#f5efe7]">
