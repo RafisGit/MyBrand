@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
+import { useLenis } from "lenis/react";
+import { motion } from "framer-motion";
 import { navigationLinks } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 import { CartSheet } from "@/components/layout/cart-sheet";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -12,65 +12,126 @@ import { UserAuthButton } from "@/components/layout/user-auth-button";
 
 export function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(72);
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Measure exact header height dynamically to prevent any CLS
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+
+    const updateHeight = () => {
+      const h = el.getBoundingClientRect().height;
+      if (h > 0) {
+        setHeaderHeight(h);
+        document.documentElement.style.setProperty("--header-height", `${h}px`);
+      }
+    };
+
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Sync scroll position with Lenis or fallback window scroll listener
+  useLenis((lenis) => {
+    const scrolled = lenis.scroll > 30;
+    setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev));
+  });
 
   useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 18);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrolled = window.scrollY > 30;
+          setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-40 transition-all duration-300",
-        isScrolled ? "px-3 pt-3" : "px-0 pt-0",
-      )}
-    >
-      <div
-        className={cn(
-          "mx-auto flex w-full max-w-[1400px] items-center justify-between transition-all duration-300 gap-3 sm:gap-4",
-          isScrolled
-            ? "rounded-full border border-black/10 bg-white/88 px-4 py-2.5 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.35)] backdrop-blur-xl lg:px-7"
-            : "border-transparent bg-transparent px-4 py-3 lg:px-8 lg:py-5",
-        )}
+    <>
+      <motion.header
+        ref={headerRef}
+        initial={false}
+        animate={{
+          paddingTop: isScrolled ? "10px" : "0px",
+          paddingLeft: isScrolled ? "12px" : "0px",
+          paddingRight: isScrolled ? "12px" : "0px",
+        }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-0 left-0 right-0 w-full z-40"
       >
-        <div className="flex items-center gap-3">
-          <MobileNav />
-          <Link href="/" className="group inline-flex flex-col rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black">
-            <span className="text-sm font-semibold uppercase tracking-[0.38em] text-black">
-              VALTORN
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.26em] text-zinc-500 transition group-hover:text-black">
-              Streetwear
-            </span>
-          </Link>
-        </div>
-
-        <nav className="hidden items-center gap-6 xl:gap-8 lg:flex">
-          {navigationLinks.map((item) => (
+        <motion.div
+          initial={false}
+          animate={{
+            borderRadius: isScrolled ? "9999px" : "0px",
+            backgroundColor: isScrolled ? "rgba(255, 255, 255, 0.94)" : "rgba(255, 255, 255, 0.82)",
+            borderColor: isScrolled ? "rgba(0, 0, 0, 0.10)" : "rgba(0, 0, 0, 0.05)",
+            boxShadow: isScrolled
+              ? "0px 20px 60px -20px rgba(0, 0, 0, 0.20)"
+              : "0px 0px 0px 0px rgba(0, 0, 0, 0)",
+            paddingTop: isScrolled ? "10px" : "16px",
+            paddingBottom: isScrolled ? "10px" : "16px",
+          }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-3 sm:gap-4 px-4 sm:px-6 lg:px-8 border-b backdrop-blur-xl"
+        >
+          <div className="flex items-center gap-3">
+            <MobileNav />
             <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-sm text-xs font-semibold uppercase tracking-[0.24em] text-zinc-600 transition hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              href="/"
+              className="group inline-flex flex-col rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             >
-              {item.label}
+              <motion.span
+                animate={{ scale: isScrolled ? 0.96 : 1 }}
+                transition={{ duration: 0.25 }}
+                className="text-sm sm:text-base font-bold uppercase tracking-[0.36em] text-black origin-left"
+              >
+                VALTORN
+              </motion.span>
+              <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-zinc-500 transition group-hover:text-black">
+                Streetwear
+              </span>
             </Link>
-          ))}
-        </nav>
+          </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <GlobalSearch />
-          <UserAuthButton />
-          <CartSheet />
-        </div>
-      </div>
-    </header>
+          <nav className="hidden items-center gap-6 xl:gap-8 lg:flex">
+            {navigationLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-sm text-xs font-semibold uppercase tracking-[0.24em] text-zinc-600 transition hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <GlobalSearch />
+            <UserAuthButton />
+            <CartSheet />
+          </div>
+        </motion.div>
+      </motion.header>
+
+      {/* Dynamic Spacer for Zero Layout Shift */}
+      <div
+        style={{ height: `${headerHeight}px` }}
+        aria-hidden="true"
+        className="w-full shrink-0 pointer-events-none"
+      />
+    </>
   );
 }

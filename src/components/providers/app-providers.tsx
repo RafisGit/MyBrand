@@ -1,11 +1,14 @@
 "use client";
 
 import { Toaster } from "sonner";
+import { GlobalAuthModal } from "@/components/auth/global-auth-modal";
+import { LenisProvider } from "@/components/providers/lenis-provider";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <LenisProvider>
       {children}
+      <GlobalAuthModal />
       <Toaster
         richColors
         position="top-right"
@@ -17,6 +20,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
           },
         }}
       />
-    </>
+    </LenisProvider>
   );
 }

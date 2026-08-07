@@ -51,7 +51,7 @@ function SheetContent({
       <SheetOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 flex flex-col gap-4 border border-black/10 bg-[#f8f5f0] p-6 shadow-2xl duration-200",
+          "fixed z-50 flex flex-col gap-4 border border-black/10 bg-[#f8f5f0] p-6 shadow-2xl duration-200 max-w-[100vw] overflow-x-hidden",
           side === "right" && "inset-y-0 right-0 h-full w-full max-w-lg",
           side === "left" && "inset-y-0 left-0 h-full w-full max-w-lg",
           side === "top" && "inset-x-0 top-0",

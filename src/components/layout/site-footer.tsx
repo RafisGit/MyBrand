@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { footerGroups, siteConfig } from "@/lib/constants";
 import { LuxuryNewsletterFooter } from "@/components/newsletter/luxury-newsletter-footer";
+import { useAuthModalStore } from "@/store/auth-modal-store";
 
 interface SiteFooterProps {
   hideNewsletter?: boolean;
@@ -14,6 +15,33 @@ export function SiteFooter({ hideNewsletter }: SiteFooterProps) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
   const shouldHideNewsletter = hideNewsletter ?? isHomePage;
+  const openModal = useAuthModalStore((state) => state.openModal);
+
+  const handleCustomerLoginClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    openModal("login");
+  };
+
+  const renderLink = (link: { label: string; href: string }, className: string) => {
+    if (link.label === "Customer Login") {
+      return (
+        <button
+          key={link.label}
+          type="button"
+          onClick={handleCustomerLoginClick}
+          className={`${className} text-left cursor-pointer`}
+        >
+          {link.label}
+        </button>
+      );
+    }
+
+    return (
+      <Link key={link.label} href={link.href} className={className}>
+        {link.label}
+      </Link>
+    );
+  };
 
   return (
     <footer className="border-t border-black/10 bg-[#0d0d0d] text-white">
@@ -38,15 +66,12 @@ export function SiteFooter({ hideNewsletter }: SiteFooterProps) {
                   {group.title}
                 </h3>
                 <div className="space-y-2">
-                  {group.links.map((link) => (
-                    <Link
-                      key={link.label}
-                      href={link.href}
-                      className="block py-1.5 text-xs text-zinc-400 transition hover:text-white"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
+                  {group.links.map((link) =>
+                    renderLink(
+                      link,
+                      "block py-1.5 text-xs text-zinc-400 transition hover:text-white"
+                    )
+                  )}
                 </div>
               </div>
             ))}
@@ -76,15 +101,12 @@ export function SiteFooter({ hideNewsletter }: SiteFooterProps) {
                     {group.title}
                   </h3>
                   <div className="space-y-2">
-                    {group.links.map((link) => (
-                      <Link
-                        key={link.label}
-                        href={link.href}
-                        className="block py-1.5 text-xs sm:text-sm text-zinc-500 transition hover:text-white"
-                      >
-                        {link.label}
-                      </Link>
-                    ))}
+                    {group.links.map((link) =>
+                      renderLink(
+                        link,
+                        "block py-1.5 text-xs sm:text-sm text-zinc-500 transition hover:text-white"
+                      )
+                    )}
                   </div>
                 </div>
               ))}

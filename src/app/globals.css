@@ -4,6 +4,7 @@
 :root {
   --background: #f5f3ef;
   --foreground: #090909;
+  --header-height: 72px;
 }
 
 @theme inline {
@@ -16,8 +17,6 @@
 }
 
 html {
-  scroll-behavior: smooth;
-  overflow-x: hidden;
   width: 100%;
   -webkit-tap-highlight-color: transparent;
 }
@@ -26,13 +25,34 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  overflow-x: hidden;
   width: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-image:
     radial-gradient(circle at top, rgba(255, 255, 255, 0.92), transparent 42%),
     linear-gradient(180deg, #faf7f2 0%, #f5f3ef 100%);
+}
+
+/* Lenis Smooth Scroll Styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }
 
 ::selection {
@@ -63,4 +83,3 @@ select.bg-zinc-100 option {
   background-color: #ffffff;
   color: #090909;
 }
-
